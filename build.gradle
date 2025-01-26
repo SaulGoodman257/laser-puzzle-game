@@ -1,0 +1,72 @@
+plugins {
+  id 'java-library'
+  id 'application'
+}
+
+repositories {
+  mavenCentral()
+}
+
+ext {
+  appName = "laser_puzzle"
+  gdxVersion = '1.13.1'
+  roboVMVersion = '2.3.20'
+  box2DLightsVersion = '1.5'
+  ashleyVersion = '1.7.4'
+  aiVersion = '1.8.2'
+  gdxControllersVersion = '2.2.1'
+}
+
+allprojects {
+  apply plugin: "eclipse"
+
+  version = '1.0'
+  ext {
+    appName = "laser_puzzle"
+    gdxVersion = '1.13.1'
+    roboVMVersion = '2.3.20'
+    box2DLightsVersion = '1.5'
+    ashleyVersion = '1.7.4'
+    aiVersion = '1.8.2'
+    gdxControllersVersion = '2.2.1'
+  }
+
+  repositories {
+    mavenCentral()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+    maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+    maven { url "https://jitpack.io" }
+  }
+}
+
+project(":core") {
+  apply plugin: "java-library"
+
+  dependencies {
+    implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
+  }
+}
+
+project(":lwjgl3") {
+  apply plugin: "java-library"
+  apply plugin: "application"
+
+  dependencies {
+    implementation project(":core")
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+    implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+  }
+
+  application {
+    mainClass = 'com.puzzle.Main'
+    applicationDefaultJvmArgs = ["-XstartOnFirstThread"]
+  }
+
+  run {
+    dependsOn build
+    mainClass = 'com.puzzle.Main'
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+    workingDir = project.file('assets').absolutePath
+  }
+}

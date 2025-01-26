@@ -1,0 +1,22 @@
+plugins {
+  id 'application'
+}
+
+dependencies {
+  implementation project(":core")
+  implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+  implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+}
+
+application {
+  mainClass = 'com.puzzle.Main'
+  applicationDefaultJvmArgs = ["-XstartOnFirstThread"]
+}
+
+run {
+  dependsOn build
+  mainClass = 'com.puzzle.Main'
+  classpath = sourceSets.main.runtimeClasspath
+  standardInput = System.in
+  workingDir = project.file('../assets').absolutePath
+}
