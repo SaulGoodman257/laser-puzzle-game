@@ -182,6 +182,14 @@ public class PlayScreen implements Screen {
                 game.setScreen(new MenuScreen(game));
             }
         });
+        oneButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.getBackgroundMusic().pause();
+                buttonClickSound.play(0.4f);
+                game.setScreen(new Level1Screen(game));
+            }
+        });
         stage.addActor(backButton);
         stage.addActor(oneButton);
         stage.addActor(twobutton);
