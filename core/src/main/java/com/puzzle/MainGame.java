@@ -13,6 +13,7 @@ public class MainGame extends Game {
     private Music backgroundMusic;
     private String backgroundMusicFile = "music.mp3";
     private Cursor customCursor;
+    private Cursor dragCursor;
 
     @Override
     public void create() {
@@ -22,6 +23,9 @@ public class MainGame extends Game {
         backgroundMusic.setLooping(true);
         backgroundMusic.setVolume(0.2f);
         playBackgroundMusic();
+        Pixmap dragCursorPixmap = new Pixmap(Gdx.files.internal("drag_cursor.png"));
+        dragCursor = Gdx.graphics.newCursor(dragCursorPixmap, 0, 0);
+        dragCursorPixmap.dispose();
 
         Pixmap cursorPixmap = new Pixmap(Gdx.files.internal("cursor.png"));
         int xHotspot = 0;
@@ -39,6 +43,7 @@ public class MainGame extends Game {
         stopBackgroundMusic();
         backgroundMusic.dispose();
         customCursor.dispose();
+        dragCursor.dispose();
     }
 
     public Music getBackgroundMusic() {
@@ -57,5 +62,13 @@ public class MainGame extends Game {
     public void stopBackgroundMusic() {
         backgroundMusic.stop();
     }
+
+    public Cursor getDragCursor() {
+        return dragCursor;
+    }
+    public Cursor getCustomCursor() {
+        return customCursor;
+    }
+
 }
 

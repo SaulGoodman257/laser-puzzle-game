@@ -1,6 +1,8 @@
 package com.puzzle;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Cursor;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -12,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Game {
+    private final MainGame game;
     private String[][] grid;
     private Stage stage;
     private Texture serTexture;
@@ -25,9 +28,10 @@ public class Game {
     private float gridStartY;
     private Map<String, Actor> actorsMap;
 
-    public Game(String[][] grid, Stage stage) {
+    public Game(String[][] grid, Stage stage, MainGame game) {
         this.grid = grid;
         this.stage = stage;
+        this.game = game;
         serTexture = new Texture(Gdx.files.internal("Ser.png"));
         blockTexture = new Texture(Gdx.files.internal("Block.png"));
         mishenTexture = new Texture(Gdx.files.internal("Mishen.png"));
@@ -116,6 +120,7 @@ public class Game {
                 grayImage.setSize(cellSize, cellSize);
                 grayImage.setPosition(startX, startY);
                 stage.addActor(grayImage);
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
             @Override
             public void drag(InputEvent event, float x, float y, int pointer) {
@@ -168,6 +173,7 @@ public class Game {
                     grayImage.remove();
                     grayImage = null;
                 }
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
     }

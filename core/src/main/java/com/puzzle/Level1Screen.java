@@ -58,7 +58,7 @@ public class Level1Screen implements Screen {
         PlayMusic.setVolume(0.5f);
         buttonClickSound = Gdx.audio.newSound(Gdx.files.internal("music_button.mp3"));
         PlayMusic.play();
-        gameLogic = new Game(level1Grid, stage);
+        gameLogic = new Game(level1Grid, stage, game);
 
         createUI();
     }
@@ -74,22 +74,26 @@ public class Level1Screen implements Screen {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
                 backgroundImage.setDrawable(new Image(level1_back).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
                 backgroundImage.setDrawable(new Image(level1Image).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
         nextButton.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
                 backgroundImage.setDrawable(new Image(level1_next).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
                 backgroundImage.setDrawable(new Image(level1Image).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
         backButton.addListener(new ClickListener() {
@@ -102,6 +106,7 @@ public class Level1Screen implements Screen {
                 game.playBackgroundMusic();
                 buttonClickSound.play(0.4f);
                 game.setScreen(new PlayScreen(game));
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
         stage.addActor(backButton);

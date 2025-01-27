@@ -95,77 +95,91 @@ public class PlayScreen implements Screen {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
                 backgroundImage.setDrawable(new Image(menu_play_back).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
                 backgroundImage.setDrawable(new Image(imageplay).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
         oneButton.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
                 backgroundImage.setDrawable(new Image(menu_play_one).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
                 backgroundImage.setDrawable(new Image(imageplay).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
         twobutton.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
                 backgroundImage.setDrawable(new Image(menu_play_two).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
                 backgroundImage.setDrawable(new Image(imageplay).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
         threebutton.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
                 backgroundImage.setDrawable(new Image(menu_play_three).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
                 backgroundImage.setDrawable(new Image(imageplay).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
         fourbutton.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
                 backgroundImage.setDrawable(new Image(menu_play_four).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
                 backgroundImage.setDrawable(new Image(imageplay).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
         fivebutton.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
                 backgroundImage.setDrawable(new Image(menu_play_five).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
                 backgroundImage.setDrawable(new Image(imageplay).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
         sixbutton.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
                 backgroundImage.setDrawable(new Image(menu_play_six).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
                 backgroundImage.setDrawable(new Image(imageplay).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
 
@@ -180,6 +194,7 @@ public class PlayScreen implements Screen {
                 game.playBackgroundMusic();*/
                 buttonClickSound.play(0.4f);
                 game.setScreen(new MenuScreen(game));
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
         oneButton.addListener(new ClickListener() {
@@ -188,6 +203,7 @@ public class PlayScreen implements Screen {
                 game.getBackgroundMusic().pause();
                 buttonClickSound.play(0.4f);
                 game.setScreen(new Level1Screen(game));
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
         stage.addActor(backButton);

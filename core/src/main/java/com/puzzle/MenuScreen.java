@@ -66,33 +66,39 @@ public class MenuScreen implements Screen {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
                 backgroundImage.setDrawable(new Image(playHoverImage).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
                 backgroundImage.setDrawable(new Image(menuImage).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
         settingsButton.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
                 backgroundImage.setDrawable(new Image(settingsHoverImage).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
                 backgroundImage.setDrawable(new Image(menuImage).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
         exitButton.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
                 backgroundImage.setDrawable(new Image(exitHoverImage).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
                 backgroundImage.setDrawable(new Image(menuImage).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
         playButton.addListener(new ClickListener() {
@@ -101,6 +107,7 @@ public class MenuScreen implements Screen {
                 buttonClickSound.play(0.4f);
                 //game.getBackgroundMusic().pause(); если надо остноавить музыку из главного меню и поставить в плей  отдельную
                 game.setScreen(new PlayScreen(game));
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
 
@@ -109,6 +116,7 @@ public class MenuScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 buttonClickSound.play(0.4f);
                 game.setScreen(new SettingsScreen(game));
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
 
@@ -117,6 +125,7 @@ public class MenuScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 buttonClickSound.play(0.4f);
                 Gdx.app.exit();
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
 

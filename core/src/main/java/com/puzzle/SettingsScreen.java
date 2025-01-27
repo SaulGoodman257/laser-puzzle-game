@@ -61,11 +61,13 @@ public class SettingsScreen implements Screen {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
                 backgroundImage.setDrawable(new Image(menu_settigs_back).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
                 backgroundImage.setDrawable(new Image(settingsImage).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
 
@@ -75,6 +77,7 @@ public class SettingsScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 buttonClickSound.play(0.4f);
                 game.setScreen(new MenuScreen(game));
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
 
