@@ -29,6 +29,13 @@ public class Level1Screen implements Screen {
     private Sound buttonClickSound;
     private int gameWidth = 1920;
     private int gameHeight = 1080;
+    private Game gameLogic;
+    private String[][] level1Grid = {
+        {"Ser", "Ser", "Block", "Ser"},
+        {"Ser", "Ser", "Mishen", "Block"},
+        {"Ser", "Ser", "Laser", "Ser"},
+        {"Ser", "Ser", "Ser", "Block"}
+    };
 
     public Level1Screen(final MainGame game) {
         this.game = game;
@@ -51,6 +58,8 @@ public class Level1Screen implements Screen {
         PlayMusic.setVolume(0.5f);
         buttonClickSound = Gdx.audio.newSound(Gdx.files.internal("music_button.mp3"));
         PlayMusic.play();
+        gameLogic = new Game(level1Grid, stage);
+
         createUI();
     }
 
@@ -129,6 +138,7 @@ public class Level1Screen implements Screen {
 
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
         stage.draw();
+        gameLogic.drawLaserLines();
     }
 
     @Override
