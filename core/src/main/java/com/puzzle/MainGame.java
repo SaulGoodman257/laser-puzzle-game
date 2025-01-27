@@ -21,7 +21,7 @@ public class MainGame extends Game {
 
         backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal(backgroundMusicFile));
         backgroundMusic.setLooping(true);
-        backgroundMusic.setVolume(0.2f);
+        backgroundMusic.setVolume(0.4f);
         playBackgroundMusic();
         Pixmap dragCursorPixmap = new Pixmap(Gdx.files.internal("drag_cursor.png"));
         dragCursor = Gdx.graphics.newCursor(dragCursorPixmap, 0, 0);

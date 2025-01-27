@@ -120,6 +120,7 @@ public class Game {
                 grayImage.setSize(cellSize, cellSize);
                 grayImage.setPosition(startX, startY);
                 stage.addActor(grayImage);
+                image.toFront();
                 Gdx.graphics.setCursor(game.getDragCursor());
             }
             @Override
