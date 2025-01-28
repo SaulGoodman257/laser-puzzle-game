@@ -70,9 +70,6 @@ public class Game {
                     case "Laser":
                         break;
                     default:
-                        image = new Image(serTexture);
-                        image.setSize(cellSize, cellSize);
-                        image.setPosition(x, y);
                         break;
                 }
                 if (image != null) {
@@ -105,10 +102,12 @@ public class Game {
     public void drawLaserLines() {
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid[i].length; j++) {
-                if (grid[i][j].equals("Laser")) {
+                if (grid[i][j].startsWith("Laser")) {
                     float x = gridStartX + i * (cellSize + cellSpacing);
                     float y = gridStartY + j * (cellSize + cellSpacing);
-                    drawLaserLine(x, y,240);
+                    String[] parts = grid[i][j].split("_");
+                    float angle = Float.parseFloat(parts[1]);
+                    drawLaserLine(x, y, angle);
                 }
             }
         }

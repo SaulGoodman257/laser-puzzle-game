@@ -33,7 +33,7 @@ public class Level1Screen implements Screen {
     private String[][] level1Grid = {
         {"Ser", "Ser", "Block", "Ser"},
         {"Ser", "Ser", "Mishen", "Block"},
-        {"Ser", "Ser", "Laser", "Ser"},
+        {"Ser", "Ser", "Laser_240", "Ser"},
         {"Ser", "Ser", "Ser", "Block"}
     };
 
