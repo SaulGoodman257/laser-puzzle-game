@@ -14,6 +14,9 @@ public class MainGame extends Game {
     private String backgroundMusicFile = "music.mp3";
     private Cursor customCursor;
     private Cursor dragCursor;
+    private int gameWidth = 1920;
+    private int gameHeight = 1080;
+    private boolean isFullscreen = true;
 
     @Override
     public void create() {
@@ -21,7 +24,7 @@ public class MainGame extends Game {
 
         backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal(backgroundMusicFile));
         backgroundMusic.setLooping(true);
-        backgroundMusic.setVolume(0.4f);
+        backgroundMusic.setVolume(0.1f);
         playBackgroundMusic();
         Pixmap dragCursorPixmap = new Pixmap(Gdx.files.internal("drag_cursor.png"));
         dragCursor = Gdx.graphics.newCursor(dragCursorPixmap, 0, 0);
@@ -68,6 +71,19 @@ public class MainGame extends Game {
     }
     public Cursor getCustomCursor() {
         return customCursor;
+    }
+    public void setFullscreen(boolean fullscreen) {
+        if (fullscreen != isFullscreen) { // Prevent unnecessary mode switching
+            if (fullscreen) {
+                Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+            } else {
+                Gdx.graphics.setWindowedMode(gameWidth, gameHeight);
+            }
+            isFullscreen = fullscreen; // Update fullscreen state
+        }
+    }
+    public boolean isFullscreen() {
+        return isFullscreen;
     }
 
 }
