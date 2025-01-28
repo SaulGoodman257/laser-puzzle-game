@@ -141,6 +141,7 @@ public class Game {
                     } else if (Math.abs(nextY - cellEndY) < 1) {
                         dirY = Math.abs(dirY);
                     }
+                    shapeRenderer.circle(endX, endY, 10);
                     shapeRenderer.rectLine(startX, startY, endX, endY, laserWidth);
                     startX = endX;
                     startY = endY;
