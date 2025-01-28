@@ -27,6 +27,7 @@ public class Game {
     private float gridStartX;
     private float gridStartY;
     private Map<String, Actor> actorsMap;
+    private float laserWidth = 5;
 
     public Game(String[][] grid, Stage stage, MainGame game) {
         this.grid = grid;
@@ -87,16 +88,68 @@ public class Game {
         float centerY = y + cellSize / 2;
         float radius = 13;
         shapeRenderer.circle(centerX, centerY, radius);
+        drawReflectedLaser(centerX, centerY, angle);
         shapeRenderer.end();
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+    }
+
+    private void drawReflectedLaser(float startX, float startY, float angle) {
         shapeRenderer.setColor(1, 0, 0, 1);
         float radians = (float) Math.toRadians(angle);
-        float laserDistance = 1000;
-        float endX = centerX + laserDistance * (float) Math.cos(radians);
-        float endY = centerY + laserDistance * (float) Math.sin(radians);
+        float endX = startX;
+        float endY = startY;
+        float laserDistance = cellSize * Math.max(grid.length, grid[0].length);
+        float dirX = (float) Math.cos(radians);
+        float dirY = (float) Math.sin(radians);
+        while (true) {
+            float nextX = endX + dirX;
+            float nextY = endY + dirY;
+            if (nextX < gridStartX || nextX > gridStartX + grid.length * (cellSize + cellSpacing) ||
+                nextY < gridStartY || nextY > gridStartY + grid[0].length * (cellSize + cellSpacing)) {
 
-        shapeRenderer.line(centerX, centerY, endX, endY);
-        shapeRenderer.end();
+                shapeRenderer.rectLine(startX, startY, endX, endY, laserWidth);
+                break;
+            }
+            int cellI = (int) ((nextX - gridStartX) / (cellSize + cellSpacing));
+            int cellJ = (int) ((nextY - gridStartY) / (cellSize + cellSpacing));
+            if ((nextX - gridStartX) % (cellSize + cellSpacing) > cellSize) {
+                cellI = -1;
+            }
+            if ((nextY - gridStartY) % (cellSize + cellSpacing) > cellSize) {
+                cellJ = -1;
+            }
+            if (cellI >= 0 && cellI < grid.length && cellJ >= 0 && cellJ < grid[0].length) {
+                String cellType = grid[cellI][cellJ];
+
+                if (cellType.equals("Block")) {
+                    float cellStartX = gridStartX + cellI * (cellSize + cellSpacing);
+                    float cellStartY = gridStartY + cellJ * (cellSize + cellSpacing);
+                    float cellEndX = cellStartX + cellSize;
+                    float cellEndY = cellStartY + cellSize;
+                    if (nextX >= cellStartX && nextX <= cellEndX && (endY < cellStartY || endY > cellEndY)) {
+                        dirY = -dirY;
+                    } else if (nextY >= cellStartY && nextY <= cellEndY && (endX < cellStartX || endX > cellEndX)) {
+                        dirX = -dirX;
+                    }
+                    if (Math.abs(nextX - cellStartX) < 1) {
+                        dirX = -Math.abs(dirX);
+                    } else if (Math.abs(nextX - cellEndX) < 1) {
+                        dirX = Math.abs(dirX);
+                    }
+
+                    if (Math.abs(nextY - cellStartY) < 1) {
+                        dirY = -Math.abs(dirY);
+                    } else if (Math.abs(nextY - cellEndY) < 1) {
+                        dirY = Math.abs(dirY);
+                    }
+                    shapeRenderer.rectLine(startX, startY, endX, endY, laserWidth);
+                    startX = endX;
+                    startY = endY;
+                } else if (cellType.equals("Ser") || cellType.equals("Mishen")) {
+                }
+            }
+            endX += dirX;
+            endY += dirY;
+        }
     }
 
     public void drawLaserLines() {
