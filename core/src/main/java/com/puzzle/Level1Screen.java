@@ -32,8 +32,8 @@ public class Level1Screen implements Screen {
     private Game gameLogic;
     private String[][] level1Grid = {
         {"Ser", "Ser", "Block", "Ser"},
-        {"Ser", "Ser", "Mishen", "Block"},
-        {"Ser", "Ser", "Laser_240", "Ser"},
+        {"Laser_60", "Ser", "Mishen", "Block"},
+        {"Ser", "Ser", "Ser", "Ser"},
         {"Ser", "Ser", "Ser", "Block"}
     };
 
@@ -169,6 +169,7 @@ public class Level1Screen implements Screen {
     public void dispose() {
         stage.dispose();
         level1Image.dispose();
+        gameLogic.dispose();
         disposeSettingsMusic();
     }
 }

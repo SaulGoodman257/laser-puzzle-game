@@ -10,6 +10,8 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,6 +22,8 @@ public class Game {
     private Texture serTexture;
     private Texture blockTexture;
     private Texture mishenTexture;
+    private Texture mishenPopalTexture;
+    private boolean isWin = false;
     private Image grayImage;
     private ShapeRenderer shapeRenderer;
     private float cellSize = 100;
@@ -36,6 +40,7 @@ public class Game {
         serTexture = new Texture(Gdx.files.internal("Ser.png"));
         blockTexture = new Texture(Gdx.files.internal("Block.png"));
         mishenTexture = new Texture(Gdx.files.internal("Mishen.png"));
+        mishenPopalTexture = new Texture(Gdx.files.internal("Mishen.popal.png"));
         shapeRenderer = new ShapeRenderer();
         gridStartX = (Gdx.graphics.getWidth() - (grid.length * cellSize) - ((grid.length - 1) * cellSpacing)) / 2;
         gridStartY = (Gdx.graphics.getHeight() - (grid[0].length * cellSize) - ((grid[0].length - 1) * cellSpacing)) / 2;
@@ -145,7 +150,15 @@ public class Game {
                     shapeRenderer.rectLine(startX, startY, endX, endY, laserWidth);
                     startX = endX;
                     startY = endY;
-                } else if (cellType.equals("Ser") || cellType.equals("Mishen")) {
+                } else if (cellType.equals("Mishen")) {
+                    if (!isWin) {
+                        isWin = true;
+                        String key = cellI + "_" + cellJ;
+                        Actor actor = actorsMap.get(key);
+                        if (actor instanceof Image) {
+                            ((Image) actor).setDrawable(new TextureRegionDrawable(mishenPopalTexture));
+                        }
+                    }
                 }
             }
             endX += dirX;
@@ -174,6 +187,7 @@ public class Game {
             int j = initialJ;
             @Override
             public void dragStart(InputEvent event, float x, float y, int pointer) {
+                if (isWin) return;
                 startX = image.getX();
                 startY = image.getY();
                 grayImage = new Image(serTexture);
@@ -185,10 +199,12 @@ public class Game {
             }
             @Override
             public void drag(InputEvent event, float x, float y, int pointer) {
+                if (isWin) return;
                 image.moveBy(x - image.getWidth() / 2, y - image.getHeight() / 2);
             }
             @Override
             public void dragStop(InputEvent event, float x, float y, int pointer) {
+                if (isWin) return;
                 float endX = image.getX() + image.getWidth() / 2;
                 float endY = image.getY() + image.getHeight() / 2;
                 int newI = -1;
@@ -237,5 +253,12 @@ public class Game {
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
+    }
+    public void dispose() {
+        serTexture.dispose();
+        blockTexture.dispose();
+        mishenTexture.dispose();
+        mishenPopalTexture.dispose();
+        shapeRenderer.dispose();
     }
 }
