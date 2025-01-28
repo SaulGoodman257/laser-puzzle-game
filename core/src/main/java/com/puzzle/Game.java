@@ -68,7 +68,6 @@ public class Game {
                         image.setPosition(cellX + (cellSize - mishenTexture.getWidth()) / 2, cellY + (cellSize - mishenTexture.getHeight()) / 2);
                         break;
                     case "Laser":
-                        drawLaserLine(cellX, cellY);
                         break;
                     default:
                         image = new Image(serTexture);
@@ -83,15 +82,23 @@ public class Game {
             }
         }
     }
-    private void drawLaserLine(float x, float y) {
+    private void drawLaserLine(float x, float y, float angle) {
         shapeRenderer.setProjectionMatrix(stage.getCamera().combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(1, 0, 0, 1);
+        float centerX = x + cellSize / 2;
+        float centerY = y + cellSize / 2;
+        float radius = 13;
+        shapeRenderer.circle(centerX, centerY, radius);
+        shapeRenderer.end();
         shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         shapeRenderer.setColor(1, 0, 0, 1);
-
-        float centerX = x + cellSize / 2;
-        float centerY = y + cellSize /2;
+        float radians = (float) Math.toRadians(angle);
         float laserDistance = 1000;
-        shapeRenderer.line(centerX, centerY, centerX + laserDistance, centerY+ laserDistance);
+        float endX = centerX + laserDistance * (float) Math.cos(radians);
+        float endY = centerY + laserDistance * (float) Math.sin(radians);
+
+        shapeRenderer.line(centerX, centerY, endX, endY);
         shapeRenderer.end();
     }
 
@@ -101,7 +108,7 @@ public class Game {
                 if (grid[i][j].equals("Laser")) {
                     float x = gridStartX + i * (cellSize + cellSpacing);
                     float y = gridStartY + j * (cellSize + cellSpacing);
-                    drawLaserLine(x, y);
+                    drawLaserLine(x, y,240);
                 }
             }
         }
