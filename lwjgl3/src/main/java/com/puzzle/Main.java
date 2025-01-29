@@ -10,7 +10,7 @@ public class Main {
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
         config.setForegroundFPS(60);
         config.setTitle("Laser Puzzle Game");
-        config.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());
+        config.setWindowedMode(1920, 1080);
         config.setResizable(false);
         config.setWindowIcon(Files.FileType.Internal, "icon_256.png" , "icon_128.png", "icon_64.png","icon_48.png",  "icon_32.png");
         new Lwjgl3Application(new MainGame(), config);

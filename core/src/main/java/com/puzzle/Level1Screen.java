@@ -18,7 +18,6 @@ import com.badlogic.gdx.audio.Music;
 public class Level1Screen implements Screen {
 
     private final MainGame game;
-
     private OrthographicCamera camera;
     private Stage stage;
     private Texture level1Image;
@@ -39,13 +38,10 @@ public class Level1Screen implements Screen {
 
     public Level1Screen(final MainGame game) {
         this.game = game;
-
         camera = new OrthographicCamera();
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
         stage = new Stage(new ScreenViewport(camera), game.batch);
         Gdx.input.setInputProcessor(stage);
-
         level1Image = new Texture(Gdx.files.internal("level1_menu.Png"));
         level1_back = new Texture(Gdx.files.internal("level1_back.png"));
         level1_next = new Texture(Gdx.files.internal("level1_next.png"));
@@ -55,11 +51,10 @@ public class Level1Screen implements Screen {
         stage.addActor(backgroundImage);
         PlayMusic = Gdx.audio.newMusic(Gdx.files.internal("music_play.mp3"));
         PlayMusic.setLooping(true);
-        PlayMusic.setVolume(0.5f);
+        PlayMusic.setVolume(game.getGlobalVolume());
         buttonClickSound = Gdx.audio.newSound(Gdx.files.internal("music_button.mp3"));
         PlayMusic.play();
         gameLogic = new Game(level1Grid, stage, game);
-
         createUI();
     }
 
@@ -104,7 +99,7 @@ public class Level1Screen implements Screen {
                 PlayMusic.stop();
                 game.rewindBackgroundMusic();
                 game.playBackgroundMusic();
-                buttonClickSound.play(0.4f);
+                buttonClickSound.play(game.getGlobalVolume());
                 game.setScreen(new PlayScreen(game));
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
@@ -126,16 +121,13 @@ public class Level1Screen implements Screen {
     public void stopSettingsMusic() {
         PlayMusic.stop();
     }
-
     public void disposeSettingsMusic() {
         PlayMusic.dispose();
     }
-
     @Override
     public void show() {
 
     }
-
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -149,22 +141,16 @@ public class Level1Screen implements Screen {
     @Override
     public void resize(int width, int height) {
     }
-
     @Override
     public void pause() {
-
     }
-
     @Override
     public void resume() {
-
     }
 
     @Override
     public void hide() {
-
     }
-
     @Override
     public void dispose() {
         stage.dispose();

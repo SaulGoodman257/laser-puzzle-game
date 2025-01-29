@@ -17,7 +17,6 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 public class PlayScreen implements Screen {
 
     private final MainGame game;
-
     private OrthographicCamera camera;
     private Stage stage;
     private Texture imageplay;
@@ -34,16 +33,12 @@ public class PlayScreen implements Screen {
     private int gameWidth = 1920;
     private int gameHeight = 1080;
 
-
     public PlayScreen(final MainGame game) {
         this.game = game;
-
         camera = new OrthographicCamera();
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
         stage = new Stage(new ScreenViewport(camera), game.batch);
         Gdx.input.setInputProcessor(stage);
-
         imageplay = new Texture(Gdx.files.internal("menu.play.Png"));
         menu_play_back = new Texture(Gdx.files.internal("menu.playback.png"));
         menu_play_one = new Texture(Gdx.files.internal("menu.play1.png"));
@@ -58,8 +53,6 @@ public class PlayScreen implements Screen {
         stage.addActor(backgroundImage);
         playMusic = Gdx.audio.newMusic(Gdx.files.internal("music_play.mp3"));
         playMusic.setLooping(true);
-        //playMusic.play(); если надо включить музыка имено в плей отдельную
-
         buttonClickSound = Gdx.audio.newSound(Gdx.files.internal("music_button.mp3"));
         createUI();
     }
@@ -186,13 +179,7 @@ public class PlayScreen implements Screen {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                // если надо будет чтобы в плей была своя музыка!
-               /* stopAndRewind();
-                // game.rewindBackgroundMusic();
-                playMusic.stop();
-                game.rewindBackgroundMusic();
-                game.playBackgroundMusic();*/
-                buttonClickSound.play(0.4f);
+                buttonClickSound.play(game.getGlobalVolume());
                 game.setScreen(new MenuScreen(game));
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
@@ -201,7 +188,7 @@ public class PlayScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 game.getBackgroundMusic().pause();
-                buttonClickSound.play(0.4f);
+                buttonClickSound.play(game.getGlobalVolume());
                 game.setScreen(new Level1Screen(game));
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
@@ -213,46 +200,34 @@ public class PlayScreen implements Screen {
         stage.addActor(fourbutton);
         stage.addActor(fivebutton);
         stage.addActor(sixbutton);
-
     }
 
     @Override
     public void show() {
-
     }
     private void stopAndRewind() {
         playMusic.stop();
         playMusic.setPosition(0);
     }
-
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
         stage.draw();
     }
-
     @Override
     public void resize(int width, int height) {
     }
-
     @Override
     public void pause() {
-
     }
-
     @Override
     public void resume() {
-
     }
-
     @Override
     public void hide() {
-
     }
-
     @Override
     public void dispose() {
         stage.dispose();

@@ -29,14 +29,11 @@ public class MenuScreen implements Screen {
 
     public MenuScreen(final MainGame game) {
         this.game = game;
-
         camera = new OrthographicCamera(gameWidth, gameHeight);
         camera.position.set(gameWidth / 2, gameHeight / 2, 0);
         camera.update();
-
         stage = new Stage(new ScreenViewport(camera), game.batch);
         Gdx.input.setInputProcessor(stage);
-
         menuImage = new Texture(Gdx.files.internal("menu.png"));
         settingsHoverImage = new Texture(Gdx.files.internal("Settings.png"));
         playHoverImage = new Texture(Gdx.files.internal("play.png"));
@@ -45,9 +42,7 @@ public class MenuScreen implements Screen {
         backgroundImage.setSize(gameWidth, gameHeight);
         backgroundImage.setPosition(0, 0);
         stage.addActor(backgroundImage);
-
         buttonClickSound = Gdx.audio.newSound(Gdx.files.internal("music_button.mp3"));
-
         createUI();
     }
 
@@ -104,8 +99,7 @@ public class MenuScreen implements Screen {
         playButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                buttonClickSound.play(0.4f);
-                //game.getBackgroundMusic().pause(); если надо остноавить музыку из главного меню и поставить в плей  отдельную
+                buttonClickSound.play(game.getGlobalVolume());
                 game.setScreen(new PlayScreen(game));
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
@@ -114,7 +108,7 @@ public class MenuScreen implements Screen {
         settingsButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                buttonClickSound.play(0.4f);
+                buttonClickSound.play(game.getGlobalVolume());
                 game.setScreen(new SettingsScreen(game));
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
@@ -123,7 +117,7 @@ public class MenuScreen implements Screen {
         exitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                buttonClickSound.play(0.4f);
+                buttonClickSound.play(game.getGlobalVolume());
                 Gdx.app.exit();
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }

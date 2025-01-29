@@ -9,7 +9,6 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,7 +29,6 @@ public class Game {
     private float gridStartY;
     private Map<String, Actor> actorsMap;
     private float laserWidth = 5;
-
     public Game(String[][] grid, Stage stage, MainGame game) {
         this.grid = grid;
         this.stage = stage;
@@ -108,7 +106,6 @@ public class Game {
             float nextY = endY + dirY;
             if (nextX < gridStartX || nextX > gridStartX + grid.length * (cellSize + cellSpacing) ||
                 nextY < gridStartY || nextY > gridStartY + grid[0].length * (cellSize + cellSpacing)) {
-
                 shapeRenderer.rectLine(startX, startY, endX, endY, laserWidth);
                 break;
             }
@@ -122,7 +119,6 @@ public class Game {
             }
             if (cellI >= 0 && cellI < grid.length && cellJ >= 0 && cellJ < grid[0].length) {
                 String cellType = grid[cellI][cellJ];
-
                 if (cellType.equals("Block")) {
                     float cellStartX = gridStartX + cellI * (cellSize + cellSpacing);
                     float cellStartY = gridStartY + cellJ * (cellSize + cellSpacing);
