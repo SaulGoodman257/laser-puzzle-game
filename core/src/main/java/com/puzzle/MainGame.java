@@ -20,6 +20,7 @@ public class MainGame extends Game {
     private boolean isFullscreen = false;
     private float globalVolume = 0.5f;
     private Preferences prefs;
+    private Music levelMusic;
 
     @Override
     public void create() {
@@ -64,6 +65,23 @@ public class MainGame extends Game {
         customCursor.dispose();
         dragCursor.dispose();
     }
+    public void playLevelMusic() {
+        if (levelMusic == null) {
+            levelMusic = Gdx.audio.newMusic(Gdx.files.internal("music_play.mp3"));
+            levelMusic.setLooping(true);
+            levelMusic.setVolume(globalVolume);
+        }
+        if (!levelMusic.isPlaying()) {
+            levelMusic.play();
+        }
+    }
+
+    public void stopLevelMusic() {
+        if (levelMusic != null) {
+            levelMusic.stop();
+        }
+    }
+
     public Music getBackgroundMusic() {
         return backgroundMusic;
     }

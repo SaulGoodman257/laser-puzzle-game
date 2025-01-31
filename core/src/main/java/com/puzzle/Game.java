@@ -10,7 +10,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class Game {
     private final MainGame game;
@@ -29,6 +31,8 @@ public class Game {
     private float gridStartY;
     private Map<String, Actor> actorsMap;
     private float laserWidth = 5;
+    private Set<String> hitTargets;
+    private int totalTargets;
     public Game(String[][] grid, Stage stage, MainGame game) {
         this.grid = grid;
         this.stage = stage;
@@ -41,7 +45,10 @@ public class Game {
         gridStartX = (Gdx.graphics.getWidth() - (grid.length * cellSize) - ((grid.length - 1) * cellSpacing)) / 2;
         gridStartY = (Gdx.graphics.getHeight() - (grid[0].length * cellSize) - ((grid[0].length - 1) * cellSpacing)) / 2;
         actorsMap = new HashMap<>();
+        hitTargets = new HashSet<>();
+        totalTargets = 0;
         drawGrid();
+        checkWinCondition();
     }
 
     public void drawGrid() {
@@ -49,34 +56,122 @@ public class Game {
             for (int j = 0; j < grid[i].length; j++) {
                 float x = gridStartX + i * (cellSize + cellSpacing);
                 float y = gridStartY + j * (cellSize + cellSpacing);
-                float cellX = gridStartX + i * (cellSize + cellSpacing);
-                float cellY = gridStartY + j * (cellSize + cellSpacing);
-                Image image = null;
                 String key = i + "_" + j;
                 switch (grid[i][j]) {
                     case "Ser":
-                        image = new Image(serTexture);
-                        image.setSize(cellSize, cellSize);
-                        image.setPosition(x, y);
+                        Image serImage = new Image(serTexture);
+                        serImage.setSize(cellSize, cellSize);
+                        serImage.setPosition(x, y);
+                        actorsMap.put(key, serImage);
+                        stage.addActor(serImage);
+                        break;
+                    case "pustoi":
                         break;
                     case "Block":
-                        image = new Image(blockTexture);
-                        image.setSize(cellSize, cellSize);
-                        image.setPosition(x, y);
-                        makeDraggable(image, i, j);
-                        break;
-                    case "Mishen":
-                        image = new Image(mishenTexture);
-                        image.setPosition(cellX + (cellSize - mishenTexture.getWidth()) / 2, cellY + (cellSize - mishenTexture.getHeight()) / 2);
-                        break;
-                    case "Laser":
+                        Image blockImage = new Image(blockTexture);
+                        blockImage.setSize(cellSize, cellSize);
+                        blockImage.setPosition(x, y);
+                        makeDraggable(blockImage, i, j);
+                        actorsMap.put(key, blockImage);
+                        stage.addActor(blockImage);
                         break;
                     default:
+                        if (grid[i][j].startsWith("Laser")) {
+                            String[] parts = grid[i][j].split("_");
+                            String position = parts[1];
+                            float angle = Float.parseFloat(parts[2]);
+                            float offsetX = 0;
+                            float offsetY = 0;
+                            switch (position) {
+                                case "nl":
+                                    offsetX = -cellSize / 3;
+                                    offsetY = -cellSize / 3;
+                                    break;
+                                case "nn":
+                                    offsetX = 0;
+                                    offsetY = -cellSize / 3;
+                                    break;
+                                case "np":
+                                    offsetX = cellSize / 3;
+                                    offsetY = -cellSize / 3;
+                                    break;
+                                case "cl":
+                                    offsetX = -cellSize / 3;
+                                    offsetY = 0;
+                                    break;
+                                case "cc":
+                                    offsetX = 0;
+                                    offsetY = 0;
+                                    break;
+                                case "cp":
+                                    offsetX = cellSize / 3;
+                                    offsetY = 0;
+                                    break;
+                                case "tl":
+                                    offsetX = -cellSize / 3;
+                                    offsetY = cellSize / 3;
+                                    break;
+                                case "tn":
+                                    offsetX = 0;
+                                    offsetY = cellSize / 3;
+                                    break;
+                                case "tp":
+                                    offsetX = cellSize / 3;
+                                    offsetY = cellSize / 3;
+                                    break;
+                            }
+                            drawLaserLine(x + offsetX, y + offsetY, angle);
+                        } else if (grid[i][j].startsWith("Mishen")) {
+                            totalTargets++;
+                            String[] parts = grid[i][j].split("_");
+                            String position = parts[1];
+                            float offsetX = 0;
+                            float offsetY = 0;
+                            switch (position) {
+                                case "nl":
+                                    offsetX = -cellSize / 3;
+                                    offsetY = -cellSize / 3;
+                                    break;
+                                case "nn":
+                                    offsetX = 0;
+                                    offsetY = -cellSize / 3;
+                                    break;
+                                case "np":
+                                    offsetX = cellSize / 3;
+                                    offsetY = -cellSize / 3;
+                                    break;
+                                case "cl":
+                                    offsetX = -cellSize / 3;
+                                    offsetY = 0;
+                                    break;
+                                case "cc":
+                                    offsetX = 0;
+                                    offsetY = 0;
+                                    break;
+                                case "cp":
+                                    offsetX = cellSize / 3;
+                                    offsetY = 0;
+                                    break;
+                                case "tl":
+                                    offsetX = -cellSize / 3;
+                                    offsetY = cellSize / 3;
+                                    break;
+                                case "tn":
+                                    offsetX = 0;
+                                    offsetY = cellSize / 3;
+                                    break;
+                                case "tp":
+                                    offsetX = cellSize / 3;
+                                    offsetY = cellSize / 3;
+                                    break;
+                            }
+                            Image mishenImage = new Image(mishenTexture);
+                            mishenImage.setPosition(x + cellSize / 2 - mishenTexture.getWidth() / 2 + offsetX,
+                                y + cellSize / 2 - mishenTexture.getHeight() / 2 + offsetY);
+                            actorsMap.put(key + "_mishen_" + position, mishenImage);
+                            stage.addActor(mishenImage);
+                        }
                         break;
-                }
-                if (image != null) {
-                    actorsMap.put(key, image);
-                    stage.addActor(image);
                 }
             }
         }
@@ -144,19 +239,78 @@ public class Game {
                     shapeRenderer.rectLine(startX, startY, endX, endY, laserWidth);
                     startX = endX;
                     startY = endY;
-                } else if (cellType.equals("Mishen")) {
-                    if (!isWin) {
-                        isWin = true;
-                        String key = cellI + "_" + cellJ;
-                        Actor actor = actorsMap.get(key);
-                        if (actor instanceof Image) {
-                            ((Image) actor).setDrawable(new TextureRegionDrawable(mishenPopalTexture));
+                } else if (cellType.startsWith("Mishen")) {
+                    String[] parts = cellType.split("_");
+                    String position = parts[1];
+                    float cellCenterX = gridStartX + cellI * (cellSize + cellSpacing) + cellSize / 2;
+                    float cellCenterY = gridStartY + cellJ * (cellSize + cellSpacing) + cellSize / 2;
+                    float offsetX = 0;
+                    float offsetY = 0;
+                    switch (position) {
+                        case "nl":
+                            offsetX = -cellSize / 3;
+                            offsetY = -cellSize / 3;
+                            break;
+                        case "nn":
+                            offsetX = 0;
+                            offsetY = -cellSize / 3;
+                            break;
+                        case "np":
+                            offsetX = cellSize / 3;
+                            offsetY = -cellSize / 3;
+                            break;
+                        case "cl":
+                            offsetX = -cellSize / 3;
+                            offsetY = 0;
+                            break;
+                        case "cc":
+                            offsetX = 0;
+                            offsetY = 0;
+                            break;
+                        case "cp":
+                            offsetX = cellSize / 3;
+                            offsetY = 0;
+                            break;
+                        case "tl":
+                            offsetX = -cellSize / 3;
+                            offsetY = cellSize / 3;
+                            break;
+                        case "tn":
+                            offsetX = 0;
+                            offsetY = cellSize / 3;
+                            break;
+                        case "tp":
+                            offsetX = cellSize / 3;
+                            offsetY = cellSize / 3;
+                            break;
+                    }
+                    float targetCenterX = cellCenterX + offsetX;
+                    float targetCenterY = cellCenterY + offsetY;
+                    float tolerance = 5;
+                    String targetKey = cellI + "_" + cellJ + "_mishen_" + position;
+                    if (Math.abs(endX - targetCenterX) < tolerance && Math.abs(endY - targetCenterY) < tolerance) {
+                        if (!hitTargets.contains(targetKey)) {
+                            hitTargets.add(targetKey);
+                            Actor actor = actorsMap.get(targetKey);
+                            if (actor instanceof Image) {
+                                ((Image) actor).setDrawable(new TextureRegionDrawable(mishenPopalTexture));
+                            }
                         }
+
+                        shapeRenderer.rectLine(startX, startY, endX, endY, laserWidth);
+                        checkWinCondition();
                     }
                 }
             }
             endX += dirX;
             endY += dirY;
+        }
+    }
+    private void checkWinCondition() {
+        if (hitTargets.size() == totalTargets) {
+            isWin = true;
+        } else {
+            isWin = false;
         }
     }
 
@@ -167,8 +321,49 @@ public class Game {
                     float x = gridStartX + i * (cellSize + cellSpacing);
                     float y = gridStartY + j * (cellSize + cellSpacing);
                     String[] parts = grid[i][j].split("_");
-                    float angle = Float.parseFloat(parts[1]);
-                    drawLaserLine(x, y, angle);
+                    String position = parts[1];
+                    float angle = Float.parseFloat(parts[2]);
+                    float offsetX = 0;
+                    float offsetY = 0;
+                    switch (position) {
+                        case "nl":
+                            offsetX = -cellSize / 3;
+                            offsetY = -cellSize / 3;
+                            break;
+                        case "nn":
+                            offsetX = 0;
+                            offsetY = -cellSize / 3;
+                            break;
+                        case "np":
+                            offsetX = cellSize / 3;
+                            offsetY = -cellSize / 3;
+                            break;
+                        case "cl":
+                            offsetX = -cellSize / 3;
+                            offsetY = 0;
+                            break;
+                        case "cc":
+                            offsetX = 0;
+                            offsetY = 0;
+                            break;
+                        case "cp":
+                            offsetX = cellSize / 3;
+                            offsetY = 0;
+                            break;
+                        case "tl":
+                            offsetX = -cellSize / 3;
+                            offsetY = cellSize / 3;
+                            break;
+                        case "tn":
+                            offsetX = 0;
+                            offsetY = cellSize / 3;
+                            break;
+                        case "tp":
+                            offsetX = cellSize / 3;
+                            offsetY = cellSize / 3;
+                            break;
+                    }
+                    drawLaserLine(x + offsetX, y + offsetY, angle);
                 }
             }
         }
@@ -245,12 +440,24 @@ public class Game {
                     grayImage = null;
                 }
                 Gdx.graphics.setCursor(game.getCustomCursor());
+                redrawLasers();
             }
         });
     }
     public boolean isWin() {
         return isWin;
     }
+    private void redrawLasers() {
+        hitTargets.clear();
+        for (Map.Entry<String, Actor> entry : actorsMap.entrySet()) {
+            if (entry.getKey().contains("_mishen_")) {
+                ((Image) entry.getValue()).setDrawable(new TextureRegionDrawable(mishenTexture));
+            }
+        }
+
+        checkWinCondition();
+    }
+
     public void dispose() {
         serTexture.dispose();
         blockTexture.dispose();

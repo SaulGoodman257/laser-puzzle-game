@@ -16,16 +16,17 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.audio.Music;
 
 
-public class Level1Screen implements Screen {
+public class Level2Screen implements Screen {
 
     private final MainGame game;
     private OrthographicCamera camera;
     private Stage stage;
-    private Texture level1Image;
+    private Texture level2Image;
     private Music PlayMusic;
     private Image backgroundImage;
-    private Texture level1_back;
-    private Texture level1_next;
+    private Texture level2_back;
+    private Texture level2_next;
+    private Texture level2_nazad;
     private Sound buttonClickSound;
     private int gameWidth = 1920;
     private int gameHeight = 1080;
@@ -34,31 +35,31 @@ public class Level1Screen implements Screen {
     private Game gameLogic;
     private boolean isWin = false;
     private Stage congratulationStage;
-    private String[][] level1Grid = {
-        {"Ser", "Ser", "Ser", "Ser"},
-        {"Laser_сс_60", "Ser", "Mishen_сс", "Ser"},
-        {"Ser", "Ser", "Ser", "Ser"},
-        {"Ser", "Ser", "Ser", "Block"}
+    private String[][] level2Grid = {
+        {"pustoi","Laser_tp_309","pustoi"},
+        {"Ser","Ser","Block"},
+        {"Ser","Block","Ser"},
+        {"Ser","Mishen_cp","Block"}
     };
-
-    public Level1Screen(final MainGame game) {
+    public Level2Screen(final MainGame game) {
         this.game = game;
         camera = new OrthographicCamera();
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         stage = new Stage(new ScreenViewport(camera), game.batch);
         congratulationStage = new Stage(new ScreenViewport(), game.batch);
         Gdx.input.setInputProcessor(stage);
-        level1Image = new Texture(Gdx.files.internal("level1_menu.png"));
-        level1_back = new Texture(Gdx.files.internal("level1_back.png"));
-        level1_next = new Texture(Gdx.files.internal("level1_next.png"));
-        congratulationsTexture = new Texture(Gdx.files.internal("congratilations1.png"));
-        backgroundImage = new Image(level1Image);
+        level2Image = new Texture(Gdx.files.internal("level2_menu.png"));
+        level2_back = new Texture(Gdx.files.internal("level2_back.png"));
+        level2_next = new Texture(Gdx.files.internal("level2_next.png"));
+        level2_nazad = new Texture(Gdx.files.internal("level2_nazad.png"));
+        congratulationsTexture = new Texture(Gdx.files.internal("congratilations2.png"));
+        backgroundImage = new Image(level2Image);
         backgroundImage.setSize(gameWidth, gameHeight);
         backgroundImage.setPosition(0, 0);
         stage.addActor(backgroundImage);
         buttonClickSound = Gdx.audio.newSound(Gdx.files.internal("music_button.mp3"));
         game.playLevelMusic();
-        gameLogic = new Game(level1Grid, stage, game);
+        gameLogic = new Game(level2Grid, stage, game);
         createUI();
     }
 
@@ -69,16 +70,17 @@ public class Level1Screen implements Screen {
         backButton.setBounds(783, 35, 350, 103);
         TextButton nextButton = new TextButton("", textButtonStyle);
         nextButton.setBounds(1460, 35, 110, 110);
+        TextButton nazadButton = new TextButton("", textButtonStyle);
+        nazadButton.setBounds(350, 35, 110, 110);
         backButton.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
-                backgroundImage.setDrawable(new Image(level1_back).getDrawable());
+                backgroundImage.setDrawable(new Image(level2_back).getDrawable());
                 Gdx.graphics.setCursor(game.getDragCursor());
             }
-
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
-                backgroundImage.setDrawable(new Image(level1Image).getDrawable());
+                backgroundImage.setDrawable(new Image(level2Image).getDrawable());
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
@@ -86,14 +88,27 @@ public class Level1Screen implements Screen {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
                 if (isWin) {
-                    backgroundImage.setDrawable(new Image(level1_next).getDrawable());
+                    backgroundImage.setDrawable(new Image(level2_next).getDrawable());
                     Gdx.graphics.setCursor(game.getDragCursor());
                 }
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
-                backgroundImage.setDrawable(new Image(level1Image).getDrawable());
+                backgroundImage.setDrawable(new Image(level2Image).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
+            }
+        });
+        nazadButton.addListener(new ClickListener() {
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
+                    backgroundImage.setDrawable(new Image(level2_nazad).getDrawable());
+                    Gdx.graphics.setCursor(game.getDragCursor());
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
+                backgroundImage.setDrawable(new Image(level2Image).getDrawable());
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
@@ -109,20 +124,29 @@ public class Level1Screen implements Screen {
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
+        nazadButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                buttonClickSound.play(game.getGlobalVolume());
+                game.setScreen(new Level1Screen(game));
+                Gdx.graphics.setCursor(game.getCustomCursor());
+            }
+        });
         nextButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 if (isWin) {
                     buttonClickSound.play(game.getGlobalVolume());
-                    game.setScreen(new Level2Screen(game));
+                    game.setScreen(new Level3Screen(game));
                     Gdx.graphics.setCursor(game.getCustomCursor());
                 }
             }
-
-
         });
+
+
         stage.addActor(backButton);
         stage.addActor(nextButton);
+        stage.addActor(nazadButton);
     }
 
     public void showCongratulations() {
@@ -187,7 +211,7 @@ public class Level1Screen implements Screen {
     @Override
     public void dispose() {
         stage.dispose();
-        level1Image.dispose();
+        level2Image.dispose();
         gameLogic.dispose();
         disposeSettingsMusic();
     }

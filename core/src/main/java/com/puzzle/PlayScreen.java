@@ -193,6 +193,25 @@ public class PlayScreen implements Screen {
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
+        twobutton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.getBackgroundMusic().pause();
+                buttonClickSound.play(game.getGlobalVolume());
+                game.setScreen(new Level2Screen(game));
+                Gdx.graphics.setCursor(game.getCustomCursor());
+            }
+        });
+        threebutton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.getBackgroundMusic().pause();
+                buttonClickSound.play(game.getGlobalVolume());
+                game.setScreen(new Level3Screen(game));
+                Gdx.graphics.setCursor(game.getCustomCursor());
+            }
+        });
+
         stage.addActor(backButton);
         stage.addActor(oneButton);
         stage.addActor(twobutton);
