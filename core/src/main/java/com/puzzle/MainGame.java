@@ -34,11 +34,7 @@ public class MainGame extends Game {
         prefs = Gdx.app.getPreferences("Settings");
         globalVolume = prefs.getFloat("globalVolume", 0.5f);
         isFullscreen = prefs.getBoolean("isFullscreen", false);
-        if (isFullscreen) {
-            Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
-        } else {
-            Gdx.graphics.setWindowedMode(gameWidth, gameHeight);
-        }
+        applyResolutionSettings();
         backgroundMusic.setVolume(globalVolume);
         Pixmap cursorPixmap = new Pixmap(Gdx.files.internal("cursor.png"));
         int xHotspot = 0;
@@ -80,6 +76,20 @@ public class MainGame extends Game {
             backgroundMusic.play();
         }
     }
+    private void applyResolutionSettings() {
+        int screenWidth = Gdx.graphics.getDisplayMode().width;
+        int screenHeight = Gdx.graphics.getDisplayMode().height;
+        if (screenWidth > gameWidth || screenHeight > gameHeight) {
+            isFullscreen = false;
+            prefs.putBoolean("isFullscreen", false);
+            prefs.flush();
+            Gdx.graphics.setWindowedMode(gameWidth, gameHeight);
+        } else if (screenWidth == gameWidth && screenHeight == gameHeight && isFullscreen) {
+            Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+        } else {
+            Gdx.graphics.setWindowedMode(gameWidth, gameHeight);
+        }
+    }
 
     public void stopBackgroundMusic() {
         backgroundMusic.stop();
@@ -91,6 +101,11 @@ public class MainGame extends Game {
         return customCursor;
     }
     public void setFullscreen(boolean fullscreen) {
+        int screenWidth = Gdx.graphics.getDisplayMode().width;
+        int screenHeight = Gdx.graphics.getDisplayMode().height;
+        if (fullscreen && (screenWidth != gameWidth || screenHeight != gameHeight)) {
+            return;
+        }
         if (fullscreen != isFullscreen) {
             if (fullscreen) {
                 Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());

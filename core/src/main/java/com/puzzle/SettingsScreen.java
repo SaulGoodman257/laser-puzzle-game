@@ -44,7 +44,7 @@ public class SettingsScreen implements Screen {
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         stage = new Stage(new ScreenViewport(camera), game.batch);
         Gdx.input.setInputProcessor(stage);
-        settingsImage = new Texture(Gdx.files.internal("menu.settings.Png"));
+        settingsImage = new Texture(Gdx.files.internal("menu.settings.png"));
         menu_settigs_back = new Texture(Gdx.files.internal("menu.settingsback.png"));
         menu_settingsturnfull=new Texture(Gdx.files.internal("menu_settingsturnfull.png"));
         menu_settingsturnfullback=new Texture(Gdx.files.internal("menu_settingsturnfullback.png"));
@@ -138,8 +138,10 @@ public class SettingsScreen implements Screen {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 buttonClickSound.play(game.getGlobalVolume());
-                isFullscreen = true;
-                game.setFullscreen(true);
+                if (Gdx.graphics.getDisplayMode().width == gameWidth && Gdx.graphics.getDisplayMode().height == gameHeight) {
+                    isFullscreen = true;
+                    game.setFullscreen(true);
+                }
                 updateBackgroundTexture();
             }
         });

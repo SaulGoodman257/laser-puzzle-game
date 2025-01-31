@@ -1,5 +1,6 @@
 plugins {
   id 'application'
+  id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 dependencies {
@@ -11,6 +12,12 @@ dependencies {
 application {
   mainClass = 'com.puzzle.Main'
   applicationDefaultJvmArgs = ["-XstartOnFirstThread"]
+}
+shadowJar {
+  archiveBaseName.set('laser_puzzle')
+  archiveClassifier.set('')
+  archiveVersion.set('1.0')
+  mergeServiceFiles()
 }
 
 run {

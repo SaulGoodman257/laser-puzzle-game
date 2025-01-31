@@ -8,7 +8,7 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 public class Main {
     public static void main(String[] arg) {
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
-        config.setForegroundFPS(60);
+        config.setForegroundFPS(75);
         config.setTitle("Laser Puzzle Game");
         config.setWindowedMode(1920, 1080);
         config.setResizable(false);

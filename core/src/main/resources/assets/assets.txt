@@ -1,0 +1,14 @@
+Exit.png
+Settings.png
+cursor.png
+icon_128.png
+icon_16.png
+icon_32.png
+icon_48.png
+menu.play.png
+menu.png
+menu.settings.png
+music.mp3
+music_button.mp3
+music_play.mp3
+play.png

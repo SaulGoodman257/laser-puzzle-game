@@ -248,6 +248,9 @@ public class Game {
             }
         });
     }
+    public boolean isWin() {
+        return isWin;
+    }
     public void dispose() {
         serTexture.dispose();
         blockTexture.dispose();

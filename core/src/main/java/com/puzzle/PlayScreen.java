@@ -39,7 +39,7 @@ public class PlayScreen implements Screen {
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         stage = new Stage(new ScreenViewport(camera), game.batch);
         Gdx.input.setInputProcessor(stage);
-        imageplay = new Texture(Gdx.files.internal("menu.play.Png"));
+        imageplay = new Texture(Gdx.files.internal("menu.play.png"));
         menu_play_back = new Texture(Gdx.files.internal("menu.playback.png"));
         menu_play_one = new Texture(Gdx.files.internal("menu.play1.png"));
         menu_play_two = new Texture(Gdx.files.internal("menu.play2.png"));
