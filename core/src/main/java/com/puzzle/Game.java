@@ -25,7 +25,7 @@ public class Game {
     private boolean isWin = false;
     private Image grayImage;
     private ShapeRenderer shapeRenderer;
-    private float cellSize = 100;
+    private float cellSize = 95;
     private float cellSpacing = 20;
     private float gridStartX;
     private float gridStartY;
@@ -286,7 +286,7 @@ public class Game {
                     }
                     float targetCenterX = cellCenterX + offsetX;
                     float targetCenterY = cellCenterY + offsetY;
-                    float tolerance = 5;
+                    float tolerance = 7;
                     String targetKey = cellI + "_" + cellJ + "_mishen_" + position;
                     if (Math.abs(endX - targetCenterX) < tolerance && Math.abs(endY - targetCenterY) < tolerance) {
                         if (!hitTargets.contains(targetKey)) {
