@@ -25,14 +25,17 @@ public class Game {
     private boolean isWin = false;
     private Image grayImage;
     private ShapeRenderer shapeRenderer;
-    private float cellSize = 95;
-    private float cellSpacing = 20;
+    private float cellSize = 85;
+    private float cellSpacing = 15;
     private float gridStartX;
     private float gridStartY;
     private Map<String, Actor> actorsMap;
     private float laserWidth = 5;
     private Set<String> hitTargets;
     private int totalTargets;
+    private boolean botSolved = false;
+    private boolean botUsed = false;
+    private boolean botButtonEnabled = true;
     public Game(String[][] grid, Stage stage, MainGame game) {
         this.grid = grid;
         this.stage = stage;
@@ -174,6 +177,7 @@ public class Game {
                         break;
                 }
             }
+            System.out.println("Total targets counted: " + totalTargets);
         }
     }
     private void drawLaserLine(float x, float y, float angle) {
@@ -306,12 +310,39 @@ public class Game {
             endY += dirY;
         }
     }
-    private void checkWinCondition() {
-        if (hitTargets.size() == totalTargets) {
-            isWin = true;
-        } else {
-            isWin = false;
+    protected void checkWinCondition() {
+        Set<String> currentHits = new HashSet<>();
+        for (String target : hitTargets) {
+            String[] parts = target.split("_");
+            currentHits.add(parts[0] + "," + parts[1]);
         }
+        isWin = currentHits.size() >= totalTargets;
+        botButtonEnabled = !isWin;
+    }
+    public boolean isBotButtonEnabled() {
+        return botButtonEnabled;
+    }
+
+    public void setBotButtonEnabled(boolean botButtonEnabled) {
+        this.botButtonEnabled = botButtonEnabled;
+    }
+    public void setBotSolved(boolean solved) {
+        botSolved = solved;
+    }
+    public boolean isBotSolved() {
+        return botSolved;
+    }
+    public void updateGrid(String[][] newGrid) {
+        this.grid = newGrid;
+        for (Actor actor : actorsMap.values()) {
+            actor.remove();
+        }
+        actorsMap.clear();
+        hitTargets.clear();
+        redrawLasers();
+    }
+    public void drawWinningGrid() {
+        drawGrid();
     }
 
     public void drawLaserLines() {
@@ -368,6 +399,13 @@ public class Game {
             }
         }
     }
+    public boolean isBotUsed() {
+        return botUsed;
+    }
+
+    public void setBotUsed(boolean botUsed) {
+        this.botUsed = botUsed;
+    }
 
     private void makeDraggable(final Image image, final int initialI, final int initialJ) {
         image.addListener(new DragListener() {
@@ -376,7 +414,7 @@ public class Game {
             int j = initialJ;
             @Override
             public void dragStart(InputEvent event, float x, float y, int pointer) {
-                if (isWin) return;
+                if (isWin || botSolved) return;
                 startX = image.getX();
                 startY = image.getY();
                 grayImage = new Image(serTexture);
@@ -388,12 +426,12 @@ public class Game {
             }
             @Override
             public void drag(InputEvent event, float x, float y, int pointer) {
-                if (isWin) return;
+                if (isWin || botSolved) return;
                 image.moveBy(x - image.getWidth() / 2, y - image.getHeight() / 2);
             }
             @Override
             public void dragStop(InputEvent event, float x, float y, int pointer) {
-                if (isWin) return;
+                if (isWin || botSolved) return;
                 float endX = image.getX() + image.getWidth() / 2;
                 float endY = image.getY() + image.getHeight() / 2;
                 int newI = -1;
@@ -447,14 +485,14 @@ public class Game {
     public boolean isWin() {
         return isWin;
     }
-    private void redrawLasers() {
+    protected void redrawLasers() {
         hitTargets.clear();
         for (Map.Entry<String, Actor> entry : actorsMap.entrySet()) {
             if (entry.getKey().contains("_mishen_")) {
                 ((Image) entry.getValue()).setDrawable(new TextureRegionDrawable(mishenTexture));
             }
         }
-
+        drawLaserLines();
         checkWinCondition();
     }
 

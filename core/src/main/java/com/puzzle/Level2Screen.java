@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -27,6 +28,7 @@ public class Level2Screen implements Screen {
     private Texture level2_back;
     private Texture level2_next;
     private Texture level2_nazad;
+    private Texture level2_bot;
     private Sound buttonClickSound;
     private int gameWidth = 1920;
     private int gameHeight = 1080;
@@ -35,6 +37,7 @@ public class Level2Screen implements Screen {
     private Game gameLogic;
     private boolean isWin = false;
     private Stage congratulationStage;
+    private boolean botButtonEnabled = true;
     private String[][] level2Grid = {
         {"pustoi","Laser_tp_309","pustoi"},
         {"Ser","Ser","Block"},
@@ -52,6 +55,7 @@ public class Level2Screen implements Screen {
         level2_back = new Texture(Gdx.files.internal("level2_back.png"));
         level2_next = new Texture(Gdx.files.internal("level2_next.png"));
         level2_nazad = new Texture(Gdx.files.internal("level2_nazad.png"));
+        level2_bot = new Texture(Gdx.files.internal("level2_bot.png"));
         congratulationsTexture = new Texture(Gdx.files.internal("congratilations2.png"));
         backgroundImage = new Image(level2Image);
         backgroundImage.setSize(gameWidth, gameHeight);
@@ -72,6 +76,8 @@ public class Level2Screen implements Screen {
         nextButton.setBounds(1460, 35, 110, 110);
         TextButton nazadButton = new TextButton("", textButtonStyle);
         nazadButton.setBounds(350, 35, 110, 110);
+        TextButton botButton = new TextButton("", textButtonStyle);
+        botButton.setBounds(853, 155, 200, 60);
         backButton.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
@@ -99,11 +105,24 @@ public class Level2Screen implements Screen {
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
+        botButton.addListener(new ClickListener() {
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
+                backgroundImage.setDrawable(new Image(level2_bot).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
+                backgroundImage.setDrawable(new Image(level2Image).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
+            }
+        });
         nazadButton.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
-                    backgroundImage.setDrawable(new Image(level2_nazad).getDrawable());
-                    Gdx.graphics.setCursor(game.getDragCursor());
+                backgroundImage.setDrawable(new Image(level2_nazad).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
@@ -142,8 +161,26 @@ public class Level2Screen implements Screen {
                 }
             }
         });
+        botButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (gameLogic.isBotButtonEnabled()) {
+                    gameLogic.setBotUsed(true);
+                    Bot bot = new Bot(level2Grid);
+                    String[][] solvedGrid = bot.getSolvedGrid();
+                    botButton.setTouchable(Touchable.disabled);
+                    if (solvedGrid != null) {
+                        gameLogic.updateGrid(solvedGrid);
+                        gameLogic.setBotSolved(true);
+                    } else {
+                        System.out.println("unluck");
+                    }
+                    gameLogic.setBotButtonEnabled(false);
+                }
+            }
+        });
 
-
+        stage.addActor(botButton);
         stage.addActor(backButton);
         stage.addActor(nextButton);
         stage.addActor(nazadButton);
@@ -189,6 +226,10 @@ public class Level2Screen implements Screen {
         if (gameLogic.isWin() && !isWin) {
             isWin = true;
             showCongratulations();
+            if (gameLogic.isBotSolved()) {
+                gameLogic.drawWinningGrid();
+                gameLogic.redrawLasers();
+            }
         }
         if (isWin) {
             congratulationStage.act(delta);

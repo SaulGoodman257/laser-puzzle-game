@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -26,6 +27,7 @@ public class Level1Screen implements Screen {
     private Image backgroundImage;
     private Texture level1_back;
     private Texture level1_next;
+    private Texture level1_bot;
     private Sound buttonClickSound;
     private int gameWidth = 1920;
     private int gameHeight = 1080;
@@ -51,6 +53,7 @@ public class Level1Screen implements Screen {
         level1Image = new Texture(Gdx.files.internal("level1_menu.png"));
         level1_back = new Texture(Gdx.files.internal("level1_back.png"));
         level1_next = new Texture(Gdx.files.internal("level1_next.png"));
+        level1_bot = new Texture(Gdx.files.internal("level1_bot.png"));
         congratulationsTexture = new Texture(Gdx.files.internal("congratilations1.png"));
         backgroundImage = new Image(level1Image);
         backgroundImage.setSize(gameWidth, gameHeight);
@@ -69,6 +72,8 @@ public class Level1Screen implements Screen {
         backButton.setBounds(783, 35, 350, 103);
         TextButton nextButton = new TextButton("", textButtonStyle);
         nextButton.setBounds(1460, 35, 110, 110);
+        TextButton botButton = new TextButton("", textButtonStyle);
+        botButton.setBounds(853, 155, 200, 60);
         backButton.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
@@ -89,6 +94,19 @@ public class Level1Screen implements Screen {
                     backgroundImage.setDrawable(new Image(level1_next).getDrawable());
                     Gdx.graphics.setCursor(game.getDragCursor());
                 }
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
+                backgroundImage.setDrawable(new Image(level1Image).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
+            }
+        });
+        botButton.addListener(new ClickListener() {
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
+                        backgroundImage.setDrawable(new Image(level1_bot).getDrawable());
+                        Gdx.graphics.setCursor(game.getDragCursor());
             }
 
             @Override
@@ -118,9 +136,26 @@ public class Level1Screen implements Screen {
                     Gdx.graphics.setCursor(game.getCustomCursor());
                 }
             }
-
-
         });
+        botButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (gameLogic.isBotButtonEnabled()) {
+                    gameLogic.setBotUsed(true);
+                    Bot bot = new Bot(level1Grid);
+                    String[][] solvedGrid = bot.getSolvedGrid();
+                    botButton.setTouchable(Touchable.disabled);
+                    if (solvedGrid != null) {
+                        gameLogic.updateGrid(solvedGrid);
+                        gameLogic.setBotSolved(true);
+                    } else {
+                        System.out.println("Решение не найдено!");
+                    }
+                    gameLogic.setBotButtonEnabled(false);
+                }
+            }
+        });
+        stage.addActor(botButton);
         stage.addActor(backButton);
         stage.addActor(nextButton);
     }
@@ -165,6 +200,10 @@ public class Level1Screen implements Screen {
         if (gameLogic.isWin() && !isWin) {
             isWin = true;
             showCongratulations();
+            if (gameLogic.isBotSolved()) {
+                gameLogic.drawWinningGrid();
+                gameLogic.redrawLasers();
+            }
         }
         if (isWin) {
             congratulationStage.act(delta);
