@@ -29,6 +29,7 @@ public class PlayScreen implements Screen {
     private Texture menu_play_four;
     private Texture menu_play_five;
     private Texture menu_play_six;
+    private Texture menu_playcreatelevel;
     private Sound buttonClickSound;
     private int gameWidth = 1920;
     private int gameHeight = 1080;
@@ -47,6 +48,7 @@ public class PlayScreen implements Screen {
         menu_play_four = new Texture(Gdx.files.internal("menu.play4.png"));
         menu_play_five = new Texture(Gdx.files.internal("menu.play5.png"));
         menu_play_six = new Texture(Gdx.files.internal("menu.play6.png"));
+        menu_playcreatelevel=new Texture(Gdx.files.internal("menu.playcreatelevel.png"));
         backgroundImage = new Image(imageplay);
         backgroundImage.setSize(gameWidth, gameHeight);
         backgroundImage.setPosition(0, 0);
@@ -65,6 +67,9 @@ public class PlayScreen implements Screen {
         final TextButton backButton = new TextButton("", textButtonStyle);
         backButton.setBounds(783, 35, 350, 103);
 
+        final TextButton createButton = new TextButton("", textButtonStyle);
+        createButton.setBounds(810, 153, 290, 79);
+
         final TextButton oneButton = new TextButton("", textButtonStyle);
         oneButton.setBounds(508, 810, 110, 110);
 
@@ -82,6 +87,7 @@ public class PlayScreen implements Screen {
 
         final TextButton sixbutton = new TextButton("", textButtonStyle);
         sixbutton.setBounds(1298, 810, 110, 110);
+
 
 
         backButton.addListener(new ClickListener() {
@@ -175,6 +181,20 @@ public class PlayScreen implements Screen {
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
+        createButton.addListener(new ClickListener() {
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
+                backgroundImage.setDrawable(new Image(menu_playcreatelevel).getDrawable());
+                Gdx.graphics.setCursor(game.getDragCursor());
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
+                backgroundImage.setDrawable(new Image(imageplay).getDrawable());
+                Gdx.graphics.setCursor(game.getCustomCursor());
+            }
+        });
+
 
         backButton.addListener(new ClickListener() {
             @Override
@@ -238,8 +258,17 @@ public class PlayScreen implements Screen {
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
+        createButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                buttonClickSound.play(game.getGlobalVolume());
+                game.setScreen(new CreateLevelScreen(game));
+                Gdx.graphics.setCursor(game.getCustomCursor());
+            }
+        });
 
 
+        stage.addActor(createButton);
         stage.addActor(backButton);
         stage.addActor(oneButton);
         stage.addActor(twobutton);
