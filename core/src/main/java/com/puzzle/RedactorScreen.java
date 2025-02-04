@@ -5,11 +5,9 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
@@ -48,6 +46,7 @@ public class RedactorScreen implements Screen {
     private float cellSize = 85;
     private float cellSpacing = 15;
     private float mishenSize = 30;
+    private float laserSize = 30;
     private float gridStartX;
     private float gridStartY;
     private Texture serTexture;
@@ -61,8 +60,12 @@ public class RedactorScreen implements Screen {
     private Texture mishenTexture;
     private Image mishenImage;
     private Map<String, Image> cellImages = new HashMap<>();
-
     private Map<String, String> mishenPositions = new HashMap<>();
+    private Map<String, String> laserPositions = new HashMap<>();
+    private Image laserImage;
+    private float laserRotation = 0;
+    private String currentLaserPosition = "cc";
+    private float laserX, laserY;
     public RedactorScreen(final MainGame game) {
         this.game = game;
         camera = new OrthographicCamera();
@@ -103,6 +106,12 @@ public class RedactorScreen implements Screen {
         mishenTexture = new Texture(Gdx.files.internal("Mishen.png"));
         createBlockMenu();
         createUI();
+        laserImage = new Image(createLaserCircleTexture());
+        laserImage.setSize(laserSize, laserSize);
+        laserImage.setPosition(1749, 470);
+        makeDraggable(laserImage, "Laser");
+        stage.addActor(laserImage);
+        laserImage.setTouchable(Touchable.disabled);
     }
 
     private void createUI() {
@@ -185,6 +194,7 @@ public class RedactorScreen implements Screen {
                         serImage.setTouchable(Touchable.enabled);
                         pustoiImage.setTouchable(Touchable.enabled);
                         mishenImage.setTouchable(Touchable.enabled);
+                        laserImage.setTouchable(Touchable.enabled);
                     }
                 } catch (NumberFormatException e) {
                     System.out.println("Invalid input. Enter numbers only.");
@@ -199,7 +209,6 @@ public class RedactorScreen implements Screen {
                 }
             }
         });
-
         stage.addActor(saveButton);
         stage.addActor(backButton);
         stage.addActor(okButton);
@@ -221,6 +230,14 @@ public class RedactorScreen implements Screen {
         } catch (NumberFormatException e) {
             System.out.println("Invalid level number format.");
         }
+    }
+    private Texture createLaserCircleTexture() {
+        Pixmap pixmap = new Pixmap(30, 30, Pixmap.Format.RGBA8888);
+        pixmap.setColor(Color.RED);
+        pixmap.fillCircle(15, 15, 15);
+        Texture texture = new Texture(pixmap);
+        pixmap.dispose();
+        return texture;
     }
 
     private void calculateGridStartPosition() {
@@ -262,15 +279,21 @@ public class RedactorScreen implements Screen {
             String initialCellKey;
             @Override
             public void dragStart(InputEvent event, float x, float y, int pointer) {
-                if(blockType.equals("Mishen")){
-                    startX = image.getX();
-                    startY = image.getY();
-                    initialCellKey = getCellKey(event.getStageX(), event.getStageY());
+                startX = image.getX();
+                startY = image.getY();
+                initialCellKey = getCellKey(event.getStageX(), event.getStageY());
+                if (blockType.equals("Mishen") || blockType.equals("Laser")) {
+                    if (initialCellKey != null) {
+                        initialPosition = blockType.equals("Mishen") ? mishenPositions.get(initialCellKey) : laserPositions.get(initialCellKey);
+                    }
                 }
                 draggedImage = new Image(image.getDrawable());
                 if (blockType.equals("Mishen")) {
                     draggedImage.setSize(mishenSize, mishenSize);
-                } else {
+                } else if (blockType.equals("Laser")) {
+                    draggedImage.setSize(laserSize, laserSize);
+                }
+                else {
                     draggedImage.setSize(cellSize, cellSize);
                 }
                 draggedImageType = blockType;
@@ -305,8 +328,8 @@ public class RedactorScreen implements Screen {
                     }
                 }
                 if (cellI != -1 && cellJ != -1) {
+                    String targetCellKey = cellI + "_" + cellJ;
                     if (draggedImageType.equals("Mishen")) {
-                        String targetCellKey = cellI + "_" + cellJ;
                         if (initialCellKey != null && !initialCellKey.equals(targetCellKey)) {
                             mishenPositions.remove(initialCellKey);
                             updateCellImage(Integer.parseInt(initialCellKey.split("_")[0]), Integer.parseInt(initialCellKey.split("_")[1]), "pustoi");
@@ -322,12 +345,39 @@ public class RedactorScreen implements Screen {
                             mishenPositions.put(targetCellKey, newPosition);
                             updateCellImage(cellI, cellJ, draggedImageType + "_" + newPosition);
                         }
+                    } else if (draggedImageType.equals("Laser")) {
+                        if (initialCellKey != null && !initialCellKey.equals(targetCellKey)) {
+                            laserPositions.remove(initialCellKey);
+                            updateCellImage(Integer.parseInt(initialCellKey.split("_")[0]), Integer.parseInt(initialCellKey.split("_")[1]), "pustoi");
+                        }
+                        String currentPosition = laserPositions.get(targetCellKey);
+                        if (currentPosition == null) {
+                            currentGrid[cellI][cellJ] = draggedImageType + "_cc_0";
+                            laserPositions.put(targetCellKey, "cc_0");
+                            updateCellImage(cellI, cellJ, draggedImageType + "_cc_0");
+                            currentLaserPosition = "cc";
+                            float[] offset = calculateLaserOffset(currentLaserPosition);
+                            laserX = gridStartX + cellI * (cellSize + cellSpacing) + offset[0];
+                            laserY = gridStartY + cellJ * (cellSize + cellSpacing) + offset[1];
+                        } else {
+                            String[] parts = currentPosition.split("_");
+                            String position = parts[0];
+                            float rotation = parts.length > 1 ? Float.parseFloat(parts[1]) : 0;
+                            String newPosition = getNewLaserPosition(position);
+                            currentGrid[cellI][cellJ] = draggedImageType + "_" + newPosition + "_" + rotation;
+                            laserPositions.put(targetCellKey, newPosition + "_" + rotation);
+                            updateCellImage(cellI, cellJ, draggedImageType + "_" + newPosition + "_" + rotation);
+                            currentLaserPosition = newPosition;
+                            float[] offset = calculateLaserOffset(currentLaserPosition);
+                            laserX = gridStartX + cellI * (cellSize + cellSpacing) + offset[0];
+                            laserY = gridStartY + cellJ * (cellSize + cellSpacing) + offset[1];
+                        }
                     } else {
                         currentGrid[cellI][cellJ] = draggedImageType;
                         updateCellImage(cellI, cellJ, draggedImageType);
                     }
                 }
-                if (draggedImageType.equals("Mishen") && (cellI == -1 || cellJ == -1)) {
+                if ((draggedImageType.equals("Mishen") || draggedImageType.equals("Laser")) && (cellI == -1 || cellJ == -1)) {
                     image.setPosition(startX, startY);
                 }
                 draggedImage.remove();
@@ -347,7 +397,62 @@ public class RedactorScreen implements Screen {
                 if (currentPosition.equals("np")) return "cc";
                 return "cc";
             }
+            private String getNewLaserPosition(String currentPosition) {
+                if (currentPosition.equals("cc")) return "tl";
+                if (currentPosition.equals("tl")) return "tn";
+                if (currentPosition.equals("tn")) return "tp";
+                if (currentPosition.equals("tp")) return "cp";
+                if (currentPosition.equals("cp")) return "cl";
+                if (currentPosition.equals("cl")) return "nl";
+                if (currentPosition.equals("nl")) return "nn";
+                if (currentPosition.equals("nn")) return "np";
+                if (currentPosition.equals("np")) return "cc";
+                return "cc";
+            }
         });
+    }
+    private float[] calculateLaserOffset(String position) {
+        float offsetX = 0;
+        float offsetY = 0;
+        switch (position) {
+            case "nl":
+                offsetX = 0;
+                offsetY = 0;
+                break;
+            case "nn":
+                offsetX = cellSize / 2 - laserSize / 2;
+                offsetY = 0;
+                break;
+            case "np":
+                offsetX = cellSize - laserSize;
+                offsetY = 0;
+                break;
+            case "cl":
+                offsetX = 0;
+                offsetY = cellSize / 2 - laserSize / 2;
+                break;
+            case "cc":
+                offsetX = cellSize / 2 - laserSize / 2;
+                offsetY = cellSize / 2 - laserSize / 2;
+                break;
+            case "cp":
+                offsetX = cellSize - laserSize;
+                offsetY = cellSize / 2 - laserSize / 2;
+                break;
+            case "tl":
+                offsetX = 0;
+                offsetY = cellSize - laserSize;
+                break;
+            case "tn":
+                offsetX = cellSize / 2 - laserSize / 2;
+                offsetY = cellSize - laserSize;
+                break;
+            case "tp":
+                offsetX = cellSize - laserSize;
+                offsetY = cellSize - laserSize;
+                break;
+        }
+        return new float[]{offsetX, offsetY};
     }
     private void addMouseWheelListenerToStage() {
         stage.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener() {
@@ -357,17 +462,34 @@ public class RedactorScreen implements Screen {
                 for (int i = 0; i < currentGrid.length; i++) {
                     for (int j = 0; j < currentGrid[i].length; j++) {
                         String cellKey = i + "_" + j;
-                        String currentPosition = mishenPositions.get(cellKey);
-                        if (currentPosition != null) {
-                            float cellStartX = gridStartX + i * (cellSize + cellSpacing);
-                            float cellStartY = gridStartY + j * (cellSize + cellSpacing);
-                            float cellEndX = cellStartX + cellSize;
-                            float cellEndY = cellStartY + cellSize;
-                            if (x >= cellStartX && x < cellEndX && y >= cellStartY && y < cellEndY) {
-                                String newPosition = getNewMishenPositionByScroll(currentPosition, amountY);
-                                currentGrid[i][j] = "Mishen_" + newPosition;
-                                mishenPositions.put(cellKey, newPosition);
-                                updateCellImage(i, j, "Mishen_" + newPosition);
+                        String currentMishenPosition = mishenPositions.get(cellKey);
+                        String currentLaserPosition = laserPositions.get(cellKey);
+
+                        float cellStartX = gridStartX + i * (cellSize + cellSpacing);
+                        float cellStartY = gridStartY + j * (cellSize + cellSpacing);
+                        float cellEndX = cellStartX + cellSize;
+                        float cellEndY = cellStartY + cellSize;
+
+                        if (x >= cellStartX && x < cellEndX && y >= cellStartY && y < cellEndY) {
+                            if (currentMishenPosition != null) {
+                                String newMishenPosition = getNewMishenPositionByScroll(currentMishenPosition, amountY);
+                                currentGrid[i][j] = "Mishen_" + newMishenPosition;
+                                mishenPositions.put(cellKey, newMishenPosition);
+                                updateCellImage(i, j, "Mishen_" + newMishenPosition);
+                                return true;
+                            } else if (currentLaserPosition != null) {
+                                String[] parts = currentLaserPosition.split("_");
+                                String position = parts[0];
+                                float rotation = parts.length > 1 ? Float.parseFloat(parts[1]) : 0;
+                                float newRotation = (rotation + amountY * 3) % 360;
+                                if (newRotation < 0) newRotation += 360;
+                                currentGrid[i][j] = "Laser_" + position + "_" + newRotation;
+                                laserPositions.put(cellKey, position + "_" + newRotation);
+                                updateCellImage(i, j, "Laser_" + position + "_" + newRotation);
+                                currentLaserPosition = position;
+                                float[] offset = calculateLaserOffset(currentLaserPosition);
+                                laserX = gridStartX + i * (cellSize + cellSpacing) + offset[0];
+                                laserY = gridStartY + j * (cellSize + cellSpacing) + offset[1];
                                 return true;
                             }
                         }
@@ -376,6 +498,18 @@ public class RedactorScreen implements Screen {
                 return false;
             }
         });
+    }
+    private String getNewLaserPosition(String currentPosition) {
+        if (currentPosition.equals("cc")) return "tl";
+        if (currentPosition.equals("tl")) return "tn";
+        if (currentPosition.equals("tn")) return "tp";
+        if (currentPosition.equals("tp")) return "cp";
+        if (currentPosition.equals("cp")) return "cl";
+        if (currentPosition.equals("cl")) return "nl";
+        if (currentPosition.equals("nl")) return "nn";
+        if (currentPosition.equals("nn")) return "np";
+        if (currentPosition.equals("np")) return "cc";
+        return "cc";
     }
     private String getNewMishenPositionByScroll(String currentPosition, float scrollAmount) {
         String[] positions = {"cc", "tl", "tn", "tp", "cp", "cl", "nl", "nn", "np"};
@@ -407,6 +541,7 @@ public class RedactorScreen implements Screen {
         float x = gridStartX + i * (cellSize + cellSpacing);
         float y = gridStartY + j * (cellSize + cellSpacing);
         String cellKey = i + "_" + j;
+
         if (cellImages.containsKey(cellKey)) {
             cellImages.get(cellKey).remove();
             cellImages.remove(cellKey);
@@ -414,53 +549,101 @@ public class RedactorScreen implements Screen {
         Texture texture = null;
         String[] parts = blockType.split("_");
         String type = parts[0];
-        if (parts.length > 1) {
+        if (type.equals("Mishen") && parts.length > 1) {
             String position = parts[1];
-            if (type.equals("Mishen")) {
-                texture = mishenTexture;
-                float offsetX = 0;
-                float offsetY = 0;
-                switch (position) {
-                    case "nl":
-                        offsetX = -mishenSize / 2;
-                        offsetY = -mishenSize / 2;
-                        break;
-                    case "nn":
-                        offsetX = 0;
-                        offsetY = -mishenSize / 2;
-                        break;
-                    case "np":
-                        offsetX = mishenSize / 2;
-                        offsetY = -mishenSize / 2;
-                        break;
-                    case "cl":
-                        offsetX = -mishenSize / 2;
-                        offsetY = 0;
-                        break;
-                    case "cc":
-                        offsetX = 0;
-                        offsetY = 0;
-                        break;
-                    case "cp":
-                        offsetX = mishenSize / 2;
-                        offsetY = 0;
-                        break;
-                    case "tl":
-                        offsetX = -mishenSize / 2;
-                        offsetY = mishenSize / 2;
-                        break;
-                    case "tn":
-                        offsetX = 0;
-                        offsetY = mishenSize / 2;
-                        break;
-                    case "tp":
-                        offsetX = mishenSize / 2;
-                        offsetY = mishenSize / 2;
-                        break;
-                }
-                x = x + cellSize / 2 - mishenSize / 2 + offsetX;
-                y = y + cellSize / 2 - mishenSize / 2 + offsetY;
+            texture = mishenTexture;
+            float offsetX = 0;
+            float offsetY = 0;
+            switch (position) {
+                case "nl":
+                    offsetX = -mishenSize / 2;
+                    offsetY = -mishenSize / 2;
+                    break;
+                case "nn":
+                    offsetX = 0;
+                    offsetY = -mishenSize / 2;
+                    break;
+                case "np":
+                    offsetX = mishenSize / 2;
+                    offsetY = -mishenSize / 2;
+                    break;
+                case "cl":
+                    offsetX = -mishenSize / 2;
+                    offsetY = 0;
+                    break;
+                case "cc":
+                    offsetX = 0;
+                    offsetY = 0;
+                    break;
+                case "cp":
+                    offsetX = mishenSize / 2;
+                    offsetY = 0;
+                    break;
+                case "tl":
+                    offsetX = -mishenSize / 2;
+                    offsetY = mishenSize / 2;
+                    break;
+                case "tn":
+                    offsetX = 0;
+                    offsetY = mishenSize / 2;
+                    break;
+                case "tp":
+                    offsetX = mishenSize / 2;
+                    offsetY = mishenSize / 2;
+                    break;
             }
+            x = x + cellSize / 2 - mishenSize / 2 + offsetX;
+            y = y + cellSize / 2 - mishenSize / 2 + offsetY;
+        } else if (type.equals("Laser")) {
+            String position = parts[1];
+            float rotation = Float.parseFloat(parts[2]);
+            texture = createLaserCircleTexture();
+            float offsetX = 0;
+            float offsetY = 0;
+            switch (position) {
+                case "nl":
+                    offsetX = 0;
+                    offsetY = 0;
+                    break;
+                case "nn":
+                    offsetX = cellSize / 2 - laserSize / 2;
+                    offsetY = 0;
+                    break;
+                case "np":
+                    offsetX = cellSize - laserSize;
+                    offsetY = 0;
+                    break;
+                case "cl":
+                    offsetX = 0;
+                    offsetY = cellSize / 2 - laserSize / 2;
+                    break;
+                case "cc":
+                    offsetX = cellSize / 2 - laserSize / 2;
+                    offsetY = cellSize / 2 - laserSize / 2;
+                    break;
+                case "cp":
+                    offsetX = cellSize - laserSize;
+                    offsetY = cellSize / 2 - laserSize / 2;
+                    break;
+                case "tl":
+                    offsetX = 0;
+                    offsetY = cellSize - laserSize;
+                    break;
+                case "tn":
+                    offsetX = cellSize / 2 - laserSize / 2;
+                    offsetY = cellSize - laserSize;
+                    break;
+                case "tp":
+                    offsetX = cellSize - laserSize;
+                    offsetY = cellSize - laserSize;
+                    break;
+            }
+            x = x + offsetX;
+            y = y + offsetY;
+            laserRotation = rotation;
+            laserX = x;
+            laserY = y;
+            currentLaserPosition = position;
         } else {
             switch (type) {
                 case "Block":
@@ -473,11 +656,37 @@ public class RedactorScreen implements Screen {
                     break;
             }
         }
-
         if (texture != null) {
             Image newImage = new Image(texture);
             if (type.equals("Mishen")) {
                 newImage.setSize(mishenSize, mishenSize);
+            } else if (type.equals("Laser")) {
+                newImage.setSize(laserSize, laserSize);
+                newImage.setOrigin(laserSize / 2, laserSize / 2);
+                newImage.setRotation(laserRotation);
+                newImage.addListener(new ClickListener() {
+                    @Override
+                    public void clicked(InputEvent event, float x, float y) {
+                        String currentPosition = laserPositions.get(cellKey);
+                        if (currentPosition != null) {
+                            String[] parts = currentPosition.split("_");
+                            String position = parts[0];
+                            float rotation = parts.length > 1 ? Float.parseFloat(parts[1]) : 0;
+
+                            String newPosition = getNewLaserPosition(position);
+
+                            currentGrid[i][j] = "Laser_" + newPosition + "_" + rotation;
+                            laserPositions.put(cellKey, newPosition + "_" + rotation);
+                            updateCellImage(i, j, "Laser_" + newPosition + "_" + rotation);
+
+                            // Обновляем координаты и позицию лазера
+                            currentLaserPosition = newPosition;
+                            float[] offset = calculateLaserOffset(currentLaserPosition);
+                            laserX = gridStartX + i * (cellSize + cellSpacing) + offset[0];
+                            laserY = gridStartY + j * (cellSize + cellSpacing) + offset[1];
+                        }
+                    }
+                });
             } else {
                 newImage.setSize(cellSize, cellSize);
             }
@@ -485,6 +694,72 @@ public class RedactorScreen implements Screen {
             stage.addActor(newImage);
             cellImages.put(cellKey, newImage);
         } else if (type.equals("pustoi")) {
+        }
+        if (gridCreated) {
+            game.batch.begin();
+            for (int k = 0; k < currentGrid.length; k++) {
+                for (int l = 0; l < currentGrid[k].length; l++) {
+                    if (currentGrid[k][l].startsWith("Laser")) {
+                        String[] laserData = currentGrid[k][l].split("_");
+                        float rotation = Float.parseFloat(laserData[2]);
+                        String cellKey1 = k + "_" + l;
+                        String currentPosition = laserPositions.get(cellKey1);
+                        if(currentPosition != null){
+                            float offsetX = 0;
+                            float offsetY = 0;
+                            switch (parts[0]) {
+                                case "nl":
+                                    offsetX = -cellSize / 2;
+                                    offsetY = -cellSize / 2;
+                                    break;
+                                case "nn":
+                                    offsetX = 0;
+                                    offsetY = -cellSize / 2;
+                                    break;
+                                case "np":
+                                    offsetX = cellSize / 2;
+                                    offsetY = -cellSize / 2;
+                                    break;
+                                case "cl":
+                                    offsetX = -cellSize / 2;
+                                    offsetY = 0;
+                                    break;
+                                case "cc":
+                                    offsetX = 0;
+                                    offsetY = 0;
+                                    break;
+                                case "cp":
+                                    offsetX = cellSize / 2;
+                                    offsetY = 0;
+                                    break;
+                                case "tl":
+                                    offsetX = -cellSize / 2;
+                                    offsetY = cellSize / 2;
+                                    break;
+                                case "tn":
+                                    offsetX = 0;
+                                    offsetY = cellSize / 2;
+                                    break;
+                                case "tp":
+                                    offsetX = cellSize / 2;
+                                    offsetY = cellSize / 2;
+                                    break;
+                            }
+                            float laserStartX = gridStartX + k * (cellSize + cellSpacing) + cellSize / 2 + offsetX;
+                            float laserStartY = gridStartY + l * (cellSize + cellSpacing) + cellSize / 2 + offsetY;
+                            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+                            shapeRenderer.setColor(Color.RED);
+                            float centerX = laserStartX;
+                            float centerY = laserStartY;
+                            float radius = 13;
+                            shapeRenderer.circle(centerX, centerY, radius);
+                            shapeRenderer.end();
+                            drawLaser(game.batch, laserStartX, laserStartY, rotation);
+                        }
+                    }
+                }
+            }
+            game.batch.end();
         }
     }
 
@@ -527,9 +802,142 @@ public class RedactorScreen implements Screen {
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
         stage.draw();
+        if (gridCreated) {
+            game.batch.begin();
+            for (int i = 0; i < currentGrid.length; i++) {
+                for (int j = 0; j < currentGrid[i].length; j++) {
+                    if (currentGrid[i][j].startsWith("Laser")) {
+                        String[] laserData = currentGrid[i][j].split("_");
+                        float rotation = Float.parseFloat(laserData[2]);
+                        String cellKey = i + "_" + j;
+                        String currentPosition = laserPositions.get(cellKey);
+                        if(currentPosition != null){
+                            String[] parts = currentPosition.split("_");
+                            float offsetX = 0;
+                            float offsetY = 0;
+                            switch (parts[0]) {
+                                case "nl":
+                                    offsetX = -cellSize / 2;
+                                    offsetY = -cellSize / 2;
+                                    break;
+                                case "nn":
+                                    offsetX = 0;
+                                    offsetY = -cellSize / 2;
+                                    break;
+                                case "np":
+                                    offsetX = cellSize / 2;
+                                    offsetY = -cellSize / 2;
+                                    break;
+                                case "cl":
+                                    offsetX = -cellSize / 2;
+                                    offsetY = 0;
+                                    break;
+                                case "cc":
+                                    offsetX = 0;
+                                    offsetY = 0;
+                                    break;
+                                case "cp":
+                                    offsetX = cellSize / 2;
+                                    offsetY = 0;
+                                    break;
+                                case "tl":
+                                    offsetX = -cellSize / 2;
+                                    offsetY = cellSize / 2;
+                                    break;
+                                case "tn":
+                                    offsetX = 0;
+                                    offsetY = cellSize / 2;
+                                    break;
+                                case "tp":
+                                    offsetX = cellSize / 2;
+                                    offsetY = cellSize / 2;
+                                    break;
+                            }
+                            float laserX = gridStartX + i * (cellSize + cellSpacing) + cellSize / 2 + offsetX;
+                            float laserY = gridStartY + j * (cellSize + cellSpacing) + cellSize / 2 + offsetY;
+                            drawLaser(game.batch, laserX, laserY, rotation);
+                        }
+                    }
+                }
+            }
+            game.batch.end();
+        }
+    }
+    private void drawLaser(SpriteBatch batch, float x, float y, float rotation) {
+        batch.end();
+        shapeRenderer.setProjectionMatrix(camera.combined);
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        shapeRenderer.setColor(Color.RED);
+        float startX = laserX + laserSize / 2;
+        float startY = laserY + laserSize / 2;
+        float angleRad = (float) Math.toRadians(rotation);
+        float maxLaserLength = cellSize * Math.max(currentGrid.length, currentGrid[0].length);
+        float endX = startX + maxLaserLength * (float) Math.cos(angleRad);
+        float endY = startY + maxLaserLength * (float) Math.sin(angleRad);
+        float laserWidth = 5f;
+        drawReflectedLaser(startX, startY, rotation);
+        shapeRenderer.end();
+        batch.begin();
+    }
+    private void drawReflectedLaser(float startX, float startY, float angle) {
+        shapeRenderer.setColor(1, 0, 0, 1);
+        float laserWidth = 5f;
+        shapeRenderer.setColor(1, 0, 0, 1);
+        float radians = (float) Math.toRadians(angle);
+        float endX = startX;
+        float endY = startY;
+        float dirX = (float) Math.cos(radians);
+        float dirY = (float) Math.sin(radians);
+        while (true) {
+            float nextX = endX + dirX;
+            float nextY = endY + dirY;
+            if (nextX < gridStartX || nextX > gridStartX + currentGrid.length * (cellSize + cellSpacing) ||
+                nextY < gridStartY || nextY > gridStartY + currentGrid[0].length * (cellSize + cellSpacing)) {
+                shapeRenderer.rectLine(startX, startY, endX, endY, laserWidth);
+                break;
+            }
+            int cellI = (int) ((nextX - gridStartX) / (cellSize + cellSpacing));
+            int cellJ = (int) ((nextY - gridStartY) / (cellSize + cellSpacing));
+            if ((nextX - gridStartX) % (cellSize + cellSpacing) > cellSize) {
+                cellI = -1;
+            }
+            if ((nextY - gridStartY) % (cellSize + cellSpacing) > cellSize) {
+                cellJ = -1;
+            }
+            if (cellI >= 0 && cellI < currentGrid.length && cellJ >= 0 && cellJ < currentGrid[0].length) {
+                String cellType = currentGrid[cellI][cellJ];
+                if (cellType.equals("Block")) {
+                    float cellStartX = gridStartX + cellI * (cellSize + cellSpacing);
+                    float cellStartY = gridStartY + cellJ * (cellSize + cellSpacing);
+                    float cellEndX = cellStartX + cellSize;
+                    float cellEndY = cellStartY + cellSize;
+                    if (nextX >= cellStartX && nextX <= cellEndX && (endY < cellStartY || endY > cellEndY)) {
+                        dirY = -dirY;
+                    } else if (nextY >= cellStartY && nextY <= cellEndY && (endX < cellStartX || endX > cellEndX)) {
+                        dirX = -dirX;
+                    }
+                    if (Math.abs(nextX - cellStartX) < 1) {
+                        dirX = -Math.abs(dirX);
+                    } else if (Math.abs(nextX - cellEndX) < 1) {
+                        dirX = Math.abs(dirX);
+                    }
+
+                    if (Math.abs(nextY - cellStartY) < 1) {
+                        dirY = -Math.abs(dirY);
+                    } else if (Math.abs(nextY - cellEndY) < 1) {
+                        dirY = Math.abs(dirY);
+                    }
+                    shapeRenderer.circle(endX, endY, 10);
+                    shapeRenderer.rectLine(startX, startY, endX, endY, laserWidth);
+                    startX = endX;
+                    startY = endY;
+                }
+            }
+            endX += dirX;
+            endY += dirY;
+        }
     }
     @Override
     public void resize(int width, int height) {
