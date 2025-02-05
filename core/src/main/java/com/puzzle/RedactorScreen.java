@@ -62,6 +62,7 @@ public class RedactorScreen implements Screen {
     private Map<String, Image> cellImages = new HashMap<>();
     private Map<String, String> mishenPositions = new HashMap<>();
     private Map<String, String> laserPositions = new HashMap<>();
+    private boolean laserPlaced = false;
     private Image laserImage;
     private float laserRotation = 0;
     private String currentLaserPosition = "cc";
@@ -108,7 +109,7 @@ public class RedactorScreen implements Screen {
         createUI();
         laserImage = new Image(createLaserCircleTexture());
         laserImage.setSize(laserSize, laserSize);
-        laserImage.setPosition(1749, 470);
+        laserImage.setPosition(1749, 288);
         makeDraggable(laserImage, "Laser");
         stage.addActor(laserImage);
         laserImage.setTouchable(Touchable.disabled);
@@ -279,6 +280,9 @@ public class RedactorScreen implements Screen {
             String initialCellKey;
             @Override
             public void dragStart(InputEvent event, float x, float y, int pointer) {
+                if (blockType.equals("Laser") && countLasersOnGrid() >= 1) {
+                    return;
+                }
                 startX = image.getX();
                 startY = image.getY();
                 initialCellKey = getCellKey(event.getStageX(), event.getStageY());
@@ -310,6 +314,11 @@ public class RedactorScreen implements Screen {
             @Override
             public void dragStop(InputEvent event, float x, float y, int pointer) {
                 if (draggedImage == null) return;
+                if (blockType.equals("Laser") && laserPlaced && !draggedImageType.equals("Laser")) {
+                    draggedImage.remove();
+                    draggedImage = null;
+                    return;
+                }
                 float dropX = event.getStageX();
                 float dropY = event.getStageY();
                 int cellI = -1;
@@ -411,6 +420,17 @@ public class RedactorScreen implements Screen {
             }
         });
     }
+    private int countLasersOnGrid() {
+        int laserCount = 0;
+        for (int i = 0; i < currentGrid.length; i++) {
+            for (int j = 0; j < currentGrid[i].length; j++) {
+                if (currentGrid[i][j].startsWith("Laser")) {
+                    laserCount++;
+                }
+            }
+        }
+        return laserCount;
+    }
     private float[] calculateLaserOffset(String position) {
         float offsetX = 0;
         float offsetY = 0;
@@ -477,7 +497,7 @@ public class RedactorScreen implements Screen {
                                 mishenPositions.put(cellKey, newMishenPosition);
                                 updateCellImage(i, j, "Mishen_" + newMishenPosition);
                                 return true;
-                            } else if (currentLaserPosition != null) {
+                            } else if (currentLaserPosition != null && currentGrid[i][j].startsWith("Laser")) {
                                 String[] parts = currentLaserPosition.split("_");
                                 String position = parts[0];
                                 float rotation = parts.length > 1 ? Float.parseFloat(parts[1]) : 0;
@@ -541,7 +561,6 @@ public class RedactorScreen implements Screen {
         float x = gridStartX + i * (cellSize + cellSpacing);
         float y = gridStartY + j * (cellSize + cellSpacing);
         String cellKey = i + "_" + j;
-
         if (cellImages.containsKey(cellKey)) {
             cellImages.get(cellKey).remove();
             cellImages.remove(cellKey);
@@ -672,14 +691,10 @@ public class RedactorScreen implements Screen {
                             String[] parts = currentPosition.split("_");
                             String position = parts[0];
                             float rotation = parts.length > 1 ? Float.parseFloat(parts[1]) : 0;
-
                             String newPosition = getNewLaserPosition(position);
-
                             currentGrid[i][j] = "Laser_" + newPosition + "_" + rotation;
                             laserPositions.put(cellKey, newPosition + "_" + rotation);
                             updateCellImage(i, j, "Laser_" + newPosition + "_" + rotation);
-
-                            // Обновляем координаты и позицию лазера
                             currentLaserPosition = newPosition;
                             float[] offset = calculateLaserOffset(currentLaserPosition);
                             laserX = gridStartX + i * (cellSize + cellSpacing) + offset[0];

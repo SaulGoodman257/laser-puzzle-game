@@ -157,6 +157,34 @@ public class CreateLevelScreen implements Screen {
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
+        oneButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.getBackgroundMusic().pause();
+                buttonClickSound.play(game.getGlobalVolume());
+                game.setScreen(new CreateLevel1Screen(game));
+                Gdx.graphics.setCursor(game.getCustomCursor());
+            }
+        });
+        twobutton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.getBackgroundMusic().pause();
+                buttonClickSound.play(game.getGlobalVolume());
+                game.setScreen(new CreateLevel2Screen(game));
+                Gdx.graphics.setCursor(game.getCustomCursor());
+            }
+        });
+        threebutton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.getBackgroundMusic().pause();
+                buttonClickSound.play(game.getGlobalVolume());
+                game.setScreen(new CreateLevel3Screen(game));
+                Gdx.graphics.setCursor(game.getCustomCursor());
+            }
+        });
+
         stage.addActor(createButton);
         stage.addActor(backButton);
         stage.addActor(oneButton);
