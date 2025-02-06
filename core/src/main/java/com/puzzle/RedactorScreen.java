@@ -482,32 +482,30 @@ public class RedactorScreen implements Screen {
                 for (int i = 0; i < currentGrid.length; i++) {
                     for (int j = 0; j < currentGrid[i].length; j++) {
                         String cellKey = i + "_" + j;
-                        String currentMishenPosition = mishenPositions.get(cellKey);
-                        String currentLaserPosition = laserPositions.get(cellKey);
-
                         float cellStartX = gridStartX + i * (cellSize + cellSpacing);
                         float cellStartY = gridStartY + j * (cellSize + cellSpacing);
                         float cellEndX = cellStartX + cellSize;
                         float cellEndY = cellStartY + cellSize;
 
                         if (x >= cellStartX && x < cellEndX && y >= cellStartY && y < cellEndY) {
-                            if (currentMishenPosition != null) {
+                            if (currentGrid[i][j].startsWith("Mishen")) {
+                                String currentMishenPosition = currentGrid[i][j].split("_")[1];
                                 String newMishenPosition = getNewMishenPositionByScroll(currentMishenPosition, amountY);
                                 currentGrid[i][j] = "Mishen_" + newMishenPosition;
                                 mishenPositions.put(cellKey, newMishenPosition);
                                 updateCellImage(i, j, "Mishen_" + newMishenPosition);
                                 return true;
-                            } else if (currentLaserPosition != null && currentGrid[i][j].startsWith("Laser")) {
-                                String[] parts = currentLaserPosition.split("_");
-                                String position = parts[0];
-                                float rotation = parts.length > 1 ? Float.parseFloat(parts[1]) : 0;
-                                float newRotation = (rotation + amountY * 3) % 360;
+                            }
+                            else if (currentGrid[i][j].startsWith("Laser")) {
+                                String[] parts = currentGrid[i][j].split("_");
+                                String position = parts[1];
+                                float rotation = parts.length > 2 ? Float.parseFloat(parts[2]) : 0;
+                                float newRotation = (rotation + amountY * 2) % 360;
                                 if (newRotation < 0) newRotation += 360;
                                 currentGrid[i][j] = "Laser_" + position + "_" + newRotation;
                                 laserPositions.put(cellKey, position + "_" + newRotation);
                                 updateCellImage(i, j, "Laser_" + position + "_" + newRotation);
-                                currentLaserPosition = position;
-                                float[] offset = calculateLaserOffset(currentLaserPosition);
+                                float[] offset = calculateLaserOffset(position);
                                 laserX = gridStartX + i * (cellSize + cellSpacing) + offset[0];
                                 laserY = gridStartY + j * (cellSize + cellSpacing) + offset[1];
                                 return true;
@@ -575,19 +573,19 @@ public class RedactorScreen implements Screen {
             float offsetY = 0;
             switch (position) {
                 case "nl":
-                    offsetX = -mishenSize / 2;
-                    offsetY = -mishenSize / 2;
+                    offsetX = -cellSize / 3f;
+                    offsetY = -cellSize / 3f;
                     break;
                 case "nn":
                     offsetX = 0;
-                    offsetY = -mishenSize / 2;
+                    offsetY = -cellSize / 3f;
                     break;
                 case "np":
-                    offsetX = mishenSize / 2;
-                    offsetY = -mishenSize / 2;
+                    offsetX = cellSize / 3f;
+                    offsetY = -cellSize / 3f;
                     break;
                 case "cl":
-                    offsetX = -mishenSize / 2;
+                    offsetX = -cellSize / 3f;
                     offsetY = 0;
                     break;
                 case "cc":
@@ -595,20 +593,20 @@ public class RedactorScreen implements Screen {
                     offsetY = 0;
                     break;
                 case "cp":
-                    offsetX = mishenSize / 2;
+                    offsetX = cellSize / 3f;
                     offsetY = 0;
                     break;
                 case "tl":
-                    offsetX = -mishenSize / 2;
-                    offsetY = mishenSize / 2;
+                    offsetX = -cellSize / 3f;
+                    offsetY = cellSize / 3f;
                     break;
                 case "tn":
                     offsetX = 0;
-                    offsetY = mishenSize / 2;
+                    offsetY = cellSize / 3f;
                     break;
                 case "tp":
-                    offsetX = mishenSize / 2;
-                    offsetY = mishenSize / 2;
+                    offsetX = cellSize / 3f;
+                    offsetY = cellSize / 3f;
                     break;
             }
             x = x + cellSize / 2 - mishenSize / 2 + offsetX;
