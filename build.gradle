@@ -3,10 +3,6 @@ plugins {
   id 'application'
 }
 
-repositories {
-  mavenCentral()
-}
-
 ext {
   appName = "laser_puzzle"
   gdxVersion = '1.13.1'
@@ -30,13 +26,6 @@ allprojects {
     aiVersion = '1.8.2'
     gdxControllersVersion = '2.2.1'
   }
-
-  repositories {
-    mavenCentral()
-    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
-    maven { url "https://oss.sonatype.org/content/repositories/releases/" }
-    maven { url "https://jitpack.io" }
-  }
 }
 
 project(":core") {
@@ -44,6 +33,7 @@ project(":core") {
 
   dependencies {
     implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
+
   }
 }
 

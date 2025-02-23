@@ -6,15 +6,16 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class MenuScreen implements Screen {
-
     private final MainGame game;
     private OrthographicCamera camera;
     private Stage stage;
@@ -26,6 +27,13 @@ public class MenuScreen implements Screen {
     private Sound buttonClickSound;
     private int gameWidth = 1920;
     private int gameHeight = 1080;
+    private Dialog loginDialog;
+    private TextField usernameField;
+    private TextField passwordField;
+    private Label messageLabel;
+    private TextButton skipButton; // Кнопка "Пропустить"
+    private boolean loginDialogShown = false;
+
 
     public MenuScreen(final MainGame game) {
         this.game = game;
@@ -43,9 +51,98 @@ public class MenuScreen implements Screen {
         backgroundImage.setPosition(0, 0);
         stage.addActor(backgroundImage);
         buttonClickSound = Gdx.audio.newSound(Gdx.files.internal("music_button.mp3"));
+        createLoginDialog();
         createUI();
     }
 
+    private void createLoginDialog() {
+        Skin skin = new Skin(Gdx.files.internal("uiskin.json"));
+        loginDialog = new Dialog("Login/Register", skin) {
+            @Override
+            protected void result(Object object) {
+                if (object.equals("skip")) {
+                    this.hide();
+                }
+            }
+        };
+        loginDialog.setModal(true);
+        loginDialog.setResizable(false);
+        usernameField = new TextField("", skin);
+        passwordField = new TextField("", skin);
+        passwordField.setPasswordMode(true);
+        passwordField.setPasswordCharacter('*');
+        TextButton loginButton = new TextButton("Login", skin);
+        TextButton registerButton = new TextButton("Register", skin);
+        messageLabel = new Label("", skin);
+        skipButton = new TextButton("Skip", skin);
+        Table contentTable = loginDialog.getContentTable();
+        contentTable.pad(20);
+        contentTable.add(new Label("Username:", skin)).padRight(10);
+        contentTable.add(usernameField).width(300).padBottom(12).row();
+        contentTable.add(new Label("Password:", skin)).padRight(10);
+        contentTable.add(passwordField).width(300).padBottom(12).row();
+        contentTable.add(messageLabel).colspan(2).padBottom(20).row();
+        Table buttonTable = loginDialog.getButtonTable();
+        buttonTable.pad(20);
+        buttonTable.add(loginButton).width(150).padRight(20);
+        buttonTable.add(registerButton).width(150).padRight(20);
+        buttonTable.add(skipButton).width(150);
+        loginDialog.getTitleLabel().setFontScale(1f);
+        loginButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                String username = usernameField.getText();
+                String password = passwordField.getText();
+                if (username.isEmpty() || password.isEmpty()) {
+                    messageLabel.setText("Username and password cannot be empty");
+                    return;
+                }
+                messageLabel.setText("Logging in...");
+                Gdx.app.log("MenuScreen", "Attempting to login with username: " + username);
+                game.getApiClient().loginUser(username, password, new ApiClient.ApiResponseListener<String>() {
+                    @Override
+                    public void onSuccess(String result) {
+                        messageLabel.setText("Login successful!");
+                        loginDialog.hide();
+                        game.setLoggedIn(true);
+                        Gdx.app.log("MenuScreen", "Login successful for user: " + result);
+                    }
+                    @Override
+                    public void onError(Throwable e) {
+                        messageLabel.setText("Login failed: " + e.getMessage());
+                        Gdx.app.log("MenuScreen", "Login failed: " + e.getMessage(), e);
+                    }
+                });
+            }
+        });
+        registerButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                String username = usernameField.getText();
+                String password = passwordField.getText();
+                messageLabel.setText("Registering...");
+                game.getApiClient().registerUser(username, password, new ApiClient.ApiResponseListener<String>() {
+                    @Override
+                    public void onSuccess(String result) {
+                        messageLabel.setText("Registration successful!");
+                        game.setLoggedIn(true);
+                    }
+                    @Override
+                    public void onError(Throwable e) {
+                        messageLabel.setText("Registration failed: " + e.getMessage());
+                    }
+                });
+            }
+        });
+        skipButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                loginDialog.hide();
+                game.setLoggedIn(true);
+            }
+        });
+        loginDialog.key(com.badlogic.gdx.Input.Keys.ESCAPE, "skip");
+    }
     private void createUI() {
         TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
         textButtonStyle.font = new com.badlogic.gdx.graphics.g2d.BitmapFont();
@@ -140,6 +237,10 @@ public class MenuScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+        camera.viewportWidth = width;
+        camera.viewportHeight = height;
+        camera.update();
     }
 
     @Override
@@ -162,9 +263,17 @@ public class MenuScreen implements Screen {
         playHoverImage.dispose();
         exitHoverImage.dispose();
         buttonClickSound.dispose();
+        if (loginDialog != null) {
+            loginDialog.remove();
+        }
     }
 
     @Override
     public void show() {
+        Gdx.input.setInputProcessor(stage);
+        if (!loginDialogShown && !game.isLoggedIn()) {
+            loginDialog.show(stage);
+            loginDialogShown = true;
+        }
     }
 }

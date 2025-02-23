@@ -205,6 +205,7 @@ public class RedactorScreen implements Screen {
         saveButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                buttonClickSound.play(game.getGlobalVolume());
                 if (gridCreated) {
                     saveLevel();
                 }
@@ -954,8 +955,6 @@ public class RedactorScreen implements Screen {
     }
     @Override
     public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
-        calculateGridStartPosition();
     }
     @Override
     public void pause() {
