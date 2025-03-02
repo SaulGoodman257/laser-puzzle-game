@@ -15,4 +15,4 @@ dependencyResolutionManagement {
   }
 }
 rootProject.name = "laser_puzzle"
-include 'lwjgl3', 'core', 'server'
+include 'lwjgl3', 'core'

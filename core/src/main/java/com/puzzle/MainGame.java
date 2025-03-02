@@ -21,12 +21,10 @@ public class MainGame extends Game {
     private float globalVolume = 0.5f;
     private Preferences prefs;
     private Music levelMusic;
-    private ApiClient apiClient;
     private boolean isLoggedIn = false;
 
     @Override
     public void create() {
-        apiClient = new ApiClient();
         batch = new SpriteBatch();
         backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal(backgroundMusicFile));
         backgroundMusic.setLooping(true);
@@ -128,9 +126,6 @@ public class MainGame extends Game {
     }
     public Cursor getCustomCursor() {
         return customCursor;
-    }
-    public ApiClient getApiClient() {
-        return apiClient;
     }
     public void setFullscreen(boolean fullscreen) {
         int screenWidth = Gdx.graphics.getDisplayMode().width;
