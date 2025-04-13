@@ -1,33 +1,30 @@
-# laser_puzzle
+# Игра головоломка с лазером 
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
-
-This project was generated without an `ApplicationListener` implementation.
-
-## Platforms
-
-- `core`: Main module with the application logic shared by all platforms.
-- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
-
-## Gradle
-
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
-
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
-
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
+Курсовой проект - 2D игра-головоломка, разработанная с использованием фреймворка LibGDX на языке Java.
+## Описание 
+Эта игра, где игрок может создавать свой уровень, либо пройти уже готовые, путём перемещения блоков и перемещая блоки лазер будет от них отражаться и необходимо направить лазер в мишени. Проект был создан в рамках курсовой работы в Уральском Государственном Горном Университете.
+## Скриншоты
+скриншот, главного меню      https://ibb.co/twywXWwf  
+скриншот, пример уровня      https://ibb.co/SDqHSXgV  
+скриншот, редактор уровней   https://ibb.co/8DjYjmhq  
+## Основные возможности
+Реализация игровой механики головоломки с лазером.  
+Взаимодействие игрока с объектами на уровне (перемещение блоков).   
+Графический интерфейс пользователя, созданный с помощью LibGDX.  
+Редактор уровней, который позволяет создавать нужный пользователю уровень.Также созданные уровни сохраняются на ПК игрока в папке пользователя, а там .prefs там храниться LevelData это уровни созданные игроком, и Settings это настройки игрока.  
+Присутствует бот который сможет решать, уровень игрока и уровни которые доступны в игре изначально.  
+## Технологический стек
+Язык: Java  
+Фреймворк: LibGDX  
+Сборка: Gradle  
+## Запуск(1 вариант)
+1. Установить IntelliJ IDEA.
+2. скачать проект.
+3. открыть его в IDE.
+4. открыть файл Main.java и запустить его
+5. дождаться синхронизации Gradle и скачивания всех зависимостией
+6. После того как всё установиться игра запуститься и можно играть.
+## Запуск(2 вариант)
+1. переходим по пути laser_puzzle\lwjgl3\build\libs
+2. Тут запускаем laser_puzzle-1.0.jar
+3. У нас открывает игра и играем.
