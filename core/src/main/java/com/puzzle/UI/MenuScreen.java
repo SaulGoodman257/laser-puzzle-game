@@ -1,4 +1,4 @@
-package com.puzzle;
+package com.puzzle.UI;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -6,14 +6,12 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.puzzle.MainGame;
 
 public class MenuScreen implements Screen {
     private final MainGame game;
@@ -27,12 +25,6 @@ public class MenuScreen implements Screen {
     private Sound buttonClickSound;
     private int gameWidth = 1920;
     private int gameHeight = 1080;
-    private Dialog loginDialog;
-    private TextField usernameField;
-    private TextField passwordField;
-    private Label messageLabel;
-    private TextButton skipButton; // Кнопка "Пропустить"
-    private boolean loginDialogShown = false;
 
 
     public MenuScreen(final MainGame game) {
@@ -173,9 +165,6 @@ public class MenuScreen implements Screen {
         playHoverImage.dispose();
         exitHoverImage.dispose();
         buttonClickSound.dispose();
-        if (loginDialog != null) {
-            loginDialog.remove();
-        }
     }
 
     @Override

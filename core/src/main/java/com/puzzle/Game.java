@@ -177,7 +177,6 @@ public class Game {
                         break;
                 }
             }
-            System.out.println("Total targets counted: " + totalTargets);
         }
     }
     private void drawLaserLine(float x, float y, float angle) {
@@ -485,7 +484,7 @@ public class Game {
     public boolean isWin() {
         return isWin;
     }
-    protected void redrawLasers() {
+    public void redrawLasers() {
         hitTargets.clear();
         for (Map.Entry<String, Actor> entry : actorsMap.entrySet()) {
             if (entry.getKey().contains("_mishen_")) {

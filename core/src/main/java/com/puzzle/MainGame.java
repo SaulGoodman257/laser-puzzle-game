@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.math.MathUtils;
+import com.puzzle.UI.MenuScreen;
 
 public class MainGame extends Game {
     public SpriteBatch batch;
@@ -21,7 +22,6 @@ public class MainGame extends Game {
     private float globalVolume = 0.5f;
     private Preferences prefs;
     private Music levelMusic;
-    private boolean isLoggedIn = false;
 
     @Override
     public void create() {
@@ -53,14 +53,6 @@ public class MainGame extends Game {
         this.globalVolume = MathUtils.clamp(volume, 0f, 1f);
         updateAllAudioVolumes();
         prefs.putFloat("globalVolume", globalVolume);
-        prefs.flush();
-    }
-    public boolean isLoggedIn() {
-        return isLoggedIn;
-    }
-    public void setLoggedIn(boolean loggedIn) {
-        isLoggedIn = loggedIn;
-        prefs.putBoolean("isLoggedIn", isLoggedIn);
         prefs.flush();
     }
     public void updateAllAudioVolumes() {

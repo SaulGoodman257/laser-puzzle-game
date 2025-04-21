@@ -1,4 +1,4 @@
-package com.puzzle;
+package com.puzzle.UI;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -17,6 +17,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.puzzle.MainGame;
 
 public class SettingsScreen implements Screen {
 

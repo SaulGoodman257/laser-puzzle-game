@@ -1,18 +1,24 @@
-package com.puzzle;
+package com.puzzle.UI;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.puzzle.CreateLevelScreen;
+import com.puzzle.LevelScreen.*;
+import com.puzzle.MainGame;
 
 public class PlayScreen implements Screen {
 
@@ -29,6 +35,7 @@ public class PlayScreen implements Screen {
     private Texture menu_play_four;
     private Texture menu_play_five;
     private Texture menu_play_six;
+    private Preferences progressPrefs;
     private Texture menu_playcreatelevel;
     private Sound buttonClickSound;
     private int gameWidth = 1920;
@@ -56,6 +63,7 @@ public class PlayScreen implements Screen {
         playMusic = Gdx.audio.newMusic(Gdx.files.internal("music_play.mp3"));
         playMusic.setLooping(true);
         buttonClickSound = Gdx.audio.newSound(Gdx.files.internal("music_button.mp3"));
+        progressPrefs = Gdx.app.getPreferences("LevelProgress");
         createUI();
     }
 
@@ -63,6 +71,7 @@ public class PlayScreen implements Screen {
 
         TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
         textButtonStyle.font = new com.badlogic.gdx.graphics.g2d.BitmapFont();
+        final int maxUnlocked = progressPrefs.getInteger("maxUnlockedLevel", 1);
 
         final TextButton backButton = new TextButton("", textButtonStyle);
         backButton.setBounds(783, 35, 350, 103);
@@ -72,6 +81,7 @@ public class PlayScreen implements Screen {
 
         final TextButton oneButton = new TextButton("", textButtonStyle);
         oneButton.setBounds(508, 810, 110, 110);
+
 
         final TextButton twobutton = new TextButton("", textButtonStyle);
         twobutton.setBounds(666, 810, 110, 110);
@@ -103,84 +113,117 @@ public class PlayScreen implements Screen {
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
         });
-        oneButton.addListener(new ClickListener() {
-            @Override
-            public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
-                backgroundImage.setDrawable(new Image(menu_play_one).getDrawable());
-                Gdx.graphics.setCursor(game.getDragCursor());
-            }
+        if (maxUnlocked >= 1) {
+            oneButton.setTouchable(Touchable.enabled);
+            oneButton.addListener(new ClickListener() {
+                @Override
+                public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
+                    backgroundImage.setDrawable(new Image(menu_play_one).getDrawable());
+                    Gdx.graphics.setCursor(game.getDragCursor());
+                }
 
-            @Override
-            public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
-                backgroundImage.setDrawable(new Image(imageplay).getDrawable());
-                Gdx.graphics.setCursor(game.getCustomCursor());
-            }
-        });
-        twobutton.addListener(new ClickListener() {
-            @Override
-            public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
-                backgroundImage.setDrawable(new Image(menu_play_two).getDrawable());
-                Gdx.graphics.setCursor(game.getDragCursor());
-            }
+                @Override
+                public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
+                    backgroundImage.setDrawable(new Image(imageplay).getDrawable());
+                    Gdx.graphics.setCursor(game.getCustomCursor());
+                }
+            });
+        }
+        if (maxUnlocked >= 2) {
+            twobutton.setTouchable(Touchable.enabled);
+            twobutton.addListener(new ClickListener() {
+                @Override
+                public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
+                    backgroundImage.setDrawable(new Image(menu_play_two).getDrawable());
+                    Gdx.graphics.setCursor(game.getDragCursor());
+                }
 
-            @Override
-            public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
-                backgroundImage.setDrawable(new Image(imageplay).getDrawable());
-                Gdx.graphics.setCursor(game.getCustomCursor());
-            }
-        });
-        threebutton.addListener(new ClickListener() {
-            @Override
-            public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
-                backgroundImage.setDrawable(new Image(menu_play_three).getDrawable());
-                Gdx.graphics.setCursor(game.getDragCursor());
-            }
+                @Override
+                public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
+                    backgroundImage.setDrawable(new Image(imageplay).getDrawable());
+                    Gdx.graphics.setCursor(game.getCustomCursor());
+                }
+            });
+        } else{
+            twobutton.setTouchable(Touchable.disabled);
+        }
 
-            @Override
-            public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
-                backgroundImage.setDrawable(new Image(imageplay).getDrawable());
-                Gdx.graphics.setCursor(game.getCustomCursor());
-            }
-        });
-        fourbutton.addListener(new ClickListener() {
-            @Override
-            public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
-                backgroundImage.setDrawable(new Image(menu_play_four).getDrawable());
-                Gdx.graphics.setCursor(game.getDragCursor());
-            }
+        if (maxUnlocked >= 3) {
+            threebutton.setTouchable(Touchable.enabled);
+            threebutton.addListener(new ClickListener() {
+                @Override
+                public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
+                    backgroundImage.setDrawable(new Image(menu_play_three).getDrawable());
+                    Gdx.graphics.setCursor(game.getDragCursor());
+                }
 
-            @Override
-            public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
-                backgroundImage.setDrawable(new Image(imageplay).getDrawable());
-                Gdx.graphics.setCursor(game.getCustomCursor());
-            }
-        });
-        fivebutton.addListener(new ClickListener() {
-            @Override
-            public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
-                backgroundImage.setDrawable(new Image(menu_play_five).getDrawable());
-                Gdx.graphics.setCursor(game.getDragCursor());
-            }
+                @Override
+                public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
+                    backgroundImage.setDrawable(new Image(imageplay).getDrawable());
+                    Gdx.graphics.setCursor(game.getCustomCursor());
+                }
+            });
+        }else{
+            threebutton.setTouchable(Touchable.disabled);
+        }
 
-            @Override
-            public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
-                backgroundImage.setDrawable(new Image(imageplay).getDrawable());
-                Gdx.graphics.setCursor(game.getCustomCursor());
-            }
-        });
-        sixbutton.addListener(new ClickListener() {
-            @Override
-            public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
-                backgroundImage.setDrawable(new Image(menu_play_six).getDrawable());
-                Gdx.graphics.setCursor(game.getDragCursor());
-            }
+        if (maxUnlocked >= 4) {
+            fourbutton.setTouchable(Touchable.enabled);
+            fourbutton.addListener(new ClickListener() {
+                @Override
+                public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
+                    backgroundImage.setDrawable(new Image(menu_play_four).getDrawable());
+                    Gdx.graphics.setCursor(game.getDragCursor());
+                }
 
-            @Override
-            public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
-                backgroundImage.setDrawable(new Image(imageplay).getDrawable());
-                Gdx.graphics.setCursor(game.getCustomCursor());
-            }
-        });
+                @Override
+                public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
+                    backgroundImage.setDrawable(new Image(imageplay).getDrawable());
+                    Gdx.graphics.setCursor(game.getCustomCursor());
+                }
+            });
+        } else {
+            fourbutton.setTouchable(Touchable.disabled);
+        }
+
+        if (maxUnlocked >= 5) {
+            fivebutton.setTouchable(Touchable.enabled);
+            fivebutton.addListener(new ClickListener() {
+                @Override
+                public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
+                    backgroundImage.setDrawable(new Image(menu_play_five).getDrawable());
+                    Gdx.graphics.setCursor(game.getDragCursor());
+                }
+
+                @Override
+                public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
+                    backgroundImage.setDrawable(new Image(imageplay).getDrawable());
+                    Gdx.graphics.setCursor(game.getCustomCursor());
+                }
+            });
+        }
+        else{
+            fivebutton.setTouchable(Touchable.disabled);
+        }
+
+        if (maxUnlocked >= 6) {
+            sixbutton.setTouchable(Touchable.enabled);
+            sixbutton.addListener(new ClickListener() {
+                @Override
+                public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {
+                    backgroundImage.setDrawable(new Image(menu_play_six).getDrawable());
+                    Gdx.graphics.setCursor(game.getDragCursor());
+                }
+
+                @Override
+                public void exit(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor toActor) {
+                    backgroundImage.setDrawable(new Image(imageplay).getDrawable());
+                    Gdx.graphics.setCursor(game.getCustomCursor());
+                }
+            });
+        } else{
+            sixbutton.setTouchable(Touchable.disabled);
+        }
         createButton.addListener(new ClickListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, com.badlogic.gdx.scenes.scene2d.Actor fromActor) {

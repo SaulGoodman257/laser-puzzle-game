@@ -1,4 +1,4 @@
-package com.puzzle;
+package com.puzzle.UI;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
@@ -20,6 +20,9 @@ import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonWriter;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.puzzle.CreateLevelScreen;
+import com.puzzle.MainGame;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,7 +33,6 @@ public class RedactorScreen implements Screen {
     private Texture imageredactor;
     private Music playMusic;
     private Image backgroundImage;
-    private Texture menu_redactor;
     private Texture menu_redactorback;
     private Texture menu_redactorok;
     private Texture menu_redactorsave;
