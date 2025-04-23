@@ -17,8 +17,9 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.puzzle.Bot;
 import com.puzzle.CreateLevelScreen;
-import com.puzzle.Game;
 import com.puzzle.MainGame;
+import com.puzzle.Render.GameView;
+import com.puzzle.logic.GameLogic;
 
 
 public class CreateLevel1Screen implements Screen {
@@ -35,8 +36,9 @@ public class CreateLevel1Screen implements Screen {
     private int gameWidth = 1920;
     private int gameHeight = 1080;
     private Texture congratulationsTexture;
-    private Game gameLogic;
     private boolean isWin = false;
+    private GameLogic logic;
+    private GameView view;
     private Stage congratulationStage;
     private String[][] level1create;
 
@@ -59,7 +61,8 @@ public class CreateLevel1Screen implements Screen {
         buttonClickSound = Gdx.audio.newSound(Gdx.files.internal("music_button.mp3"));
         game.playLevelMusic();
         level1create = loadLevelData(1);
-        gameLogic = new Game(level1create, stage, game);
+        logic = new GameLogic(level1create);
+        view  = new GameView(logic, stage, game);
         createUI();
     }
     private String[][] loadLevelData(int levelNumber) {
@@ -150,18 +153,20 @@ public class CreateLevel1Screen implements Screen {
         botButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (gameLogic.isBotButtonEnabled()) {
-                    gameLogic.setBotUsed(true);
+                if (logic.isBotButtonEnabled()) {
+                    logic.setBotUsed(true);
                     Bot bot = new Bot(level1create);
                     String[][] solvedGrid = bot.getSolvedGrid();
                     botButton.setTouchable(Touchable.disabled);
                     if (solvedGrid != null) {
-                        gameLogic.updateGrid(solvedGrid);
-                        gameLogic.setBotSolved(true);
+                        logic.updateGrid(solvedGrid);
+                        view.refreshGrid();
+                        logic.setBotSolved(true);
+                        view.redrawLasers();
                     } else {
                         System.out.println("Решение не найдено!");
                     }
-                    gameLogic.setBotButtonEnabled(false);
+                    logic.setBotButtonEnabled(false);
                 }
             }
         });
@@ -178,14 +183,11 @@ public class CreateLevel1Screen implements Screen {
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
-        stage.draw();
-       gameLogic.drawLaserLines();
-        if (gameLogic.isWin() && !isWin) {
+        view.render(Math.min(Gdx.graphics.getDeltaTime(), 1/30f));
+        if (logic.isWin() && !isWin) {
             isWin = true;
-            if (gameLogic.isBotSolved()) {
-                gameLogic.drawWinningGrid();
-                gameLogic.redrawLasers();
+            if (logic.isBotSolved()) {
+                view.redrawLasers();
             }
         }
         if (isWin) {
@@ -210,6 +212,6 @@ public class CreateLevel1Screen implements Screen {
     public void dispose() {
         stage.dispose();
         level1createImage.dispose();
-        gameLogic.dispose();
+        view.dispose();
     }
 }

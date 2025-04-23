@@ -16,15 +16,18 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.puzzle.Bot;
-import com.puzzle.Game;
 import com.puzzle.MainGame;
+import com.puzzle.Render.GameView;
 import com.puzzle.UI.PlayScreen;
+import com.puzzle.logic.GameLogic;
 
 
 public class Level1Screen implements Screen {
 
     private final MainGame game;
     private OrthographicCamera camera;
+    private GameLogic logic;
+    private GameView view;
     private Stage stage;
     private Texture level1Image;
     private Image backgroundImage;
@@ -36,12 +39,11 @@ public class Level1Screen implements Screen {
     private int gameWidth = 1920;
     private int gameHeight = 1080;
     private Texture congratulationsTexture;
-    private Game gameLogic;
     private boolean isWin = false;
     private Stage congratulationStage;
     private String[][] level1Grid = {
         {"Ser", "Ser", "Ser", "Ser"},
-        {"Laser_сс_60", "Ser", "Mishen_сс", "Ser"},
+        {"Laser_сс_60", "Ser", "Mishen_cc", "Ser"},
         {"Ser", "Ser", "Ser", "Ser"},
         {"Ser", "Ser", "Ser", "Block"}
     };
@@ -65,7 +67,8 @@ public class Level1Screen implements Screen {
         progressPrefs = Gdx.app.getPreferences("LevelProgress");
         buttonClickSound = Gdx.audio.newSound(Gdx.files.internal("music_button.mp3"));
         game.playLevelMusic();
-        gameLogic = new Game(level1Grid, stage, game);
+        logic = new GameLogic(level1Grid);
+        view  = new GameView(logic, stage, game);
         createUI();
     }
 
@@ -146,18 +149,20 @@ public class Level1Screen implements Screen {
         botButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (gameLogic.isBotButtonEnabled()) {
-                    gameLogic.setBotUsed(true);
+                if (logic.isBotButtonEnabled()) {
+                    logic.setBotUsed(true);
                     Bot bot = new Bot(level1Grid);
                     String[][] solvedGrid = bot.getSolvedGrid();
                     botButton.setTouchable(Touchable.disabled);
                     if (solvedGrid != null) {
-                        gameLogic.updateGrid(solvedGrid);
-                        gameLogic.setBotSolved(true);
+                        logic.updateGrid(solvedGrid);
+                        view.refreshGrid();
+                        logic.setBotSolved(true);
+                        view.redrawLasers();
                     } else {
                         System.out.println("Решение не найдено!");
                     }
-                    gameLogic.setBotButtonEnabled(false);
+                    logic.setBotButtonEnabled(false);
                 }
             }
         });
@@ -182,10 +187,8 @@ public class Level1Screen implements Screen {
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
-        stage.draw();
-        gameLogic.drawLaserLines();
-        if (gameLogic.isWin() && !isWin) {
+        view.render(Math.min(Gdx.graphics.getDeltaTime(), 1/30f));
+        if (logic.isWin() && !isWin) {
             isWin = true;
             int prev = progressPrefs.getInteger("maxUnlockedLevel", 1);
             if (prev < 2) {
@@ -193,9 +196,8 @@ public class Level1Screen implements Screen {
                 progressPrefs.flush();
             }
             showCongratulations();
-            if (gameLogic.isBotSolved()) {
-                gameLogic.drawWinningGrid();
-                gameLogic.redrawLasers();
+            if (logic.isBotSolved()) {
+                view.redrawLasers();
             }
         }
         if (isWin) {
@@ -220,6 +222,6 @@ public class Level1Screen implements Screen {
     public void dispose() {
         stage.dispose();
         level1Image.dispose();
-        gameLogic.dispose();
+        view.dispose();
     }
 }

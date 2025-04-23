@@ -1,6 +1,10 @@
 package com.puzzle;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.puzzle.Render.LaserTracer;
+import com.puzzle.logic.GameLogic;
 
 import java.util.*;
 
@@ -83,10 +87,18 @@ public class Bot {
         newGrid[move.serRow][move.serCol] = temp;
         return newGrid;
     }
-    private boolean isSolved(String[][] grid) {
-        Game tempGame = new Game(grid, new Stage(), new MainGame());
-        tempGame.drawLaserLines();
-        tempGame.checkWinCondition();
-        return tempGame.isWin();
+    private boolean isSolved(String[][] g) {
+        GameLogic logic = new GameLogic(g);
+        final float CELL = 85f, GAP = 15f;
+        float startX = (Gdx.graphics.getWidth()  - (g.length        * CELL) - ((g.length        - 1) * GAP)) / 2f;
+        float startY = (Gdx.graphics.getHeight() - (g[0].length     * CELL) - ((g[0].length     - 1) * GAP)) / 2f;
+        Stage dummyStage          = new Stage();
+        Map<String, Actor> actors = new HashMap<>();
+        LaserTracer tracer = new LaserTracer(logic, dummyStage, actors, CELL, GAP, startX, startY);
+        tracer.draw();
+        boolean solved = logic.isWin();
+        tracer.dispose();
+        dummyStage.dispose();
+        return solved;
     }
 }
