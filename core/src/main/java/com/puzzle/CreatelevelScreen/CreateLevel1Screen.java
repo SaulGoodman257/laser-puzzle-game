@@ -18,6 +18,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.puzzle.Bot;
 import com.puzzle.CreateLevelScreen;
 import com.puzzle.MainGame;
+import com.puzzle.Render.BotVisualizer;
 import com.puzzle.Render.GameView;
 import com.puzzle.logic.GameLogic;
 
@@ -153,21 +154,12 @@ public class CreateLevel1Screen implements Screen {
         botButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                if (logic.isBotButtonEnabled()) {
-                    logic.setBotUsed(true);
-                    Bot bot = new Bot(level1create);
-                    String[][] solvedGrid = bot.getSolvedGrid();
-                    botButton.setTouchable(Touchable.disabled);
-                    if (solvedGrid != null) {
-                        logic.updateGrid(solvedGrid);
-                        view.refreshGrid();
-                        logic.setBotSolved(true);
-                        view.redrawLasers();
-                    } else {
-                        System.out.println("Решение не найдено!");
-                    }
-                    logic.setBotButtonEnabled(false);
-                }
+                if (!logic.isBotButtonEnabled()) return;
+                logic.setBotUsed(true);
+                botButton.setTouchable(Touchable.disabled);
+                BotVisualizer visualizer = new BotVisualizer(logic, view, 0.2f);
+                visualizer.visualize();
+                logic.setBotButtonEnabled(false);
             }
         });
         stage.addActor(botButton);

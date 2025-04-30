@@ -71,14 +71,49 @@ public class Bot {
         }
         return moves;
     }
-    private static class Move {
-        int blockRow, blockCol, serRow, serCol;
+    public static class Move {
+        public int blockRow;
+        public int blockCol;
+        public int serRow;
+        public int serCol;
         Move(int blockRow, int blockCol, int serRow, int serCol) {
             this.blockRow = blockRow;
             this.blockCol = blockCol;
             this.serRow = serRow;
             this.serCol = serCol;
         }
+    }
+    private static class Node {
+        String[][] grid;
+        List<Move> moves;
+        Node(String[][] grid, List<Move> moves) {
+            this.grid = grid;
+            this.moves = moves;
+        }
+    }
+    public List<Move> solveWithPath() {
+        Queue<Node> queue = new LinkedList<>();
+        queue.add(new Node(copyGrid(this.grid), new ArrayList<>()));
+        visitedStates.clear();
+        visitedStates.add(gridToString(this.grid));
+
+        while (!queue.isEmpty()) {
+            Node node = queue.poll();
+            if (isSolved(node.grid)) {
+                return node.moves;
+            }
+            for (Move move : findPossibleMoves(node.grid)) {
+                String[][] newGrid = applyMove(node.grid, move);
+                String key = gridToString(newGrid);
+                if (!visitedStates.contains(key)) {
+                    visitedStates.add(key);
+                    List<Move> newMoves = new ArrayList<>(node.moves);
+                    newMoves.add(move);
+                    queue.add(new Node(newGrid, newMoves));
+                }
+            }
+        }
+        return null;
     }
     private String[][] applyMove(String[][] grid, Move move) {
         String[][] newGrid = copyGrid(grid);
