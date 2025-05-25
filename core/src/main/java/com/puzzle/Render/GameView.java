@@ -10,7 +10,6 @@ import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.puzzle.MainGame;
 import com.puzzle.logic.GameLogic;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -26,9 +25,10 @@ public class GameView {
     private final Texture serTex   = new Texture(Gdx.files.internal("Ser.png"));
     private final Texture blockTex = new Texture(Gdx.files.internal("Block.png"));
     private final Texture mishenTex= new Texture(Gdx.files.internal("Mishen.png"));
+    private final Texture mishenHit  = new Texture(Gdx.files.internal("Mishen.popal.png"));
     private final Map<String, Actor> actors = new HashMap<>();
     private Image grayImage;
-    private final LaserTracer tracer;
+    private final LaserView   laserView;
 
     public GameView(GameLogic logic, Stage stage, MainGame game) {
         this.logic = logic;
@@ -36,11 +36,15 @@ public class GameView {
         this.game  = game;
         gridStartX = (Gdx.graphics.getWidth() - (logic.getGrid().length * cellSize) - ((logic.getGrid().length - 1) * cellSpacing)) / 2f;
         gridStartY = (Gdx.graphics.getHeight() - (logic.getGrid()[0].length * cellSize) - ((logic.getGrid()[0].length - 1) * cellSpacing)) / 2f;
-        tracer = new LaserTracer(logic, stage, actors, cellSize, cellSpacing, gridStartX, gridStartY);
+        laserView = new LaserView(logic, stage,
+            cellSize, cellSpacing,
+            gridStartX, gridStartY);
         drawGrid();
     }
 
-    private void drawGrid() {
+
+
+    void drawGrid() {
         String[][] grid = logic.getGrid();
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid[i].length; j++) {
@@ -167,15 +171,23 @@ public class GameView {
         for (Map.Entry<String,Actor> e : actors.entrySet())
             if (e.getKey().contains("_mishen_"))
                 ((Image)e.getValue()).setDrawable(new TextureRegionDrawable(mishenTex));
-        tracer.draw();
+        laserView.draw();
     }
     public void render(float delta) {
         stage.act(delta);
         stage.draw();
-        tracer.draw();
+        laserView.draw();
+        for (String k : logic.getHitTargets()) {
+                   Actor a = actors.get(k);
+                   if (a instanceof Image image &&
+                           image.getDrawable() != null &&
+                           image.getDrawable() != new TextureRegionDrawable(mishenHit)) {
+                           image.setDrawable(new TextureRegionDrawable(mishenHit));
+                       }
+               }
     }
     public void dispose() {
-        serTex.dispose(); blockTex.dispose(); mishenTex.dispose();
-        tracer.dispose();
+        serTex.dispose(); blockTex.dispose(); mishenTex.dispose();mishenHit.dispose();
+        laserView.dispose();
     }
 }

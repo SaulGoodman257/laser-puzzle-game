@@ -2,12 +2,10 @@ package com.puzzle.UI;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
@@ -17,12 +15,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.DragListener;
-import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonWriter;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.puzzle.CreateLevelScreen;
 import com.puzzle.MainGame;
-
+import com.puzzle.logic.LaserTrace;
+import com.puzzle.Render.LaserView;
+import com.puzzle.logic.RedactorLogic;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,8 +40,6 @@ public class RedactorScreen implements Screen {
     private TextField widthField;
     private TextField heightField;
     private TextField levelNumberField;
-    private String[][] currentGrid;
-    private ShapeRenderer shapeRenderer;
     private boolean gridCreated = false;
     private float cellSize = 85;
     private float cellSpacing = 15;
@@ -62,13 +58,15 @@ public class RedactorScreen implements Screen {
     private Texture mishenTexture;
     private Image mishenImage;
     private Map<String, Image> cellImages = new HashMap<>();
-    private Map<String, String> mishenPositions = new HashMap<>();
-    private Map<String, String> laserPositions = new HashMap<>();
     private boolean laserPlaced = false;
     private Image laserImage;
     private float laserRotation = 0;
     private String currentLaserPosition = "cc";
     private float laserX, laserY;
+    private LaserTrace laserTrace;
+    private LaserView laserView;
+    private RedactorLogic logic = new RedactorLogic();
+
     public RedactorScreen(final MainGame game) {
         this.game = game;
         camera = new OrthographicCamera();
@@ -95,14 +93,13 @@ public class RedactorScreen implements Screen {
         levelNumberField.setPosition(93, 780);
         widthField.setSize(100, 40);
         heightField.setSize(100, 40);
-        levelNumberField.setSize(100,40);
+        levelNumberField.setSize(100, 40);
         widthField.setMessageText("Width 1-9");
         heightField.setMessageText("Height 1-6");
         levelNumberField.setMessageText("Level 1-3");
         stage.addActor(widthField);
         stage.addActor(heightField);
         stage.addActor(levelNumberField);
-        shapeRenderer = new ShapeRenderer();
         serTexture = new Texture(Gdx.files.internal("Ser.png"));
         blockTexture = new Texture(Gdx.files.internal("Block.png"));
         pustoiTexture = new Texture(Gdx.files.internal("pustoi.png"));
@@ -186,10 +183,12 @@ public class RedactorScreen implements Screen {
                     int height = Integer.parseInt(heightField.getText());
                     int levelNumber = Integer.parseInt(levelNumberField.getText());
 
-                    if (levelNumber >= 1 && levelNumber <= 3 && height <=6 && height >=1 && width >=1 && width <= 9) {
-                        currentGrid = createGrid(width, height);
+                    if (levelNumber >= 1 && levelNumber <= 3 && height <= 6 && height >= 1 && width >= 1 && width <= 9) {
+                        logic.createGrid(width, height);
                         gridCreated = true;
                         calculateGridStartPosition();
+                        laserTrace = new LaserTrace(logic.getEditorLogic(), logic.getGrid(), cellSize, cellSpacing, gridStartX, gridStartY);
+                        laserView = new LaserView(logic.getEditorLogic(), stage, cellSize, cellSpacing, gridStartX, gridStartY);
                         drawGrid();
                         addMouseWheelListenerToStage();
                         okButton.setTouchable(Touchable.disabled);
@@ -209,7 +208,12 @@ public class RedactorScreen implements Screen {
             public void clicked(InputEvent event, float x, float y) {
                 buttonClickSound.play(game.getGlobalVolume());
                 if (gridCreated) {
-                    saveLevel();
+                    try {
+                        int levelNumber = Integer.parseInt(levelNumberField.getText());
+                        logic.saveLevel(levelNumber);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid level number format.");
+                    }
                 }
             }
         });
@@ -217,24 +221,7 @@ public class RedactorScreen implements Screen {
         stage.addActor(backButton);
         stage.addActor(okButton);
     }
-    private void saveLevel() {
-        try {
-            int levelNumber = Integer.parseInt(levelNumberField.getText());
-            if (levelNumber >= 1 && levelNumber <= 3) {
-                Json json = new Json();
-                json.setOutputType(JsonWriter.OutputType.json);
-                String levelData = json.toJson(currentGrid);
-                Preferences prefs = Gdx.app.getPreferences("LevelData");
-                prefs.putString("level" + levelNumber, levelData);
-                prefs.flush();
-                System.out.println("Level saved successfully.");
-            } else {
-                System.out.println("Invalid level number. Enter 1, 2, or 3.");
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid level number format.");
-        }
-    }
+
     private Texture createLaserCircleTexture() {
         Pixmap pixmap = new Pixmap(30, 30, Pixmap.Format.RGBA8888);
         pixmap.setColor(Color.RED);
@@ -245,11 +232,13 @@ public class RedactorScreen implements Screen {
     }
 
     private void calculateGridStartPosition() {
-        if (currentGrid != null) {
-            gridStartX = (Gdx.graphics.getWidth() - (currentGrid.length * cellSize) - ((currentGrid.length - 1) * cellSpacing)) / 2;
-            gridStartY = (Gdx.graphics.getHeight() - (currentGrid[0].length * cellSize) - ((currentGrid[0].length - 1) * cellSpacing)) / 2;
+        String[][] grid = logic.getGrid();
+        if (grid != null) {
+            gridStartX = (Gdx.graphics.getWidth() - (grid.length * cellSize) - ((grid.length - 1) * cellSpacing)) / 2;
+            gridStartY = (Gdx.graphics.getHeight() - (grid[0].length * cellSize) - ((grid[0].length - 1) * cellSpacing)) / 2;
         }
     }
+
     private void createBlockMenu() {
         blockImage = new Image(blockTexture);
         blockImage.setPosition(1720, 810);
@@ -262,7 +251,7 @@ public class RedactorScreen implements Screen {
         makeDraggable(serImage, "Ser");
         stage.addActor(serImage);
         pustoiImage = new Image(pustoiTexture);
-        pustoiImage.setPosition(1720,400);
+        pustoiImage.setPosition(1720, 400);
         pustoiImage.setSize(cellSize, cellSize);
         makeDraggable(pustoiImage, "pustoi");
         stage.addActor(pustoiImage);
@@ -276,14 +265,16 @@ public class RedactorScreen implements Screen {
         stage.addActor(mishenImage);
         mishenImage.setTouchable(Touchable.disabled);
     }
+
     private void makeDraggable(final Image image, final String blockType) {
         image.addListener(new DragListener() {
             float startX, startY;
             String initialPosition;
             String initialCellKey;
+
             @Override
             public void dragStart(InputEvent event, float x, float y, int pointer) {
-                if (blockType.equals("Laser") && countLasersOnGrid() >= 1) {
+                if (blockType.equals("Laser") && logic.countLasersOnGrid() >= 1) {
                     return;
                 }
                 startX = image.getX();
@@ -291,7 +282,7 @@ public class RedactorScreen implements Screen {
                 initialCellKey = getCellKey(event.getStageX(), event.getStageY());
                 if (blockType.equals("Mishen") || blockType.equals("Laser")) {
                     if (initialCellKey != null) {
-                        initialPosition = blockType.equals("Mishen") ? mishenPositions.get(initialCellKey) : laserPositions.get(initialCellKey);
+                        initialPosition = blockType.equals("Mishen") ? logic.getMishenPositions().get(initialCellKey) : logic.getLaserPositions().get(initialCellKey);
                     }
                 }
                 draggedImage = new Image(image.getDrawable());
@@ -299,8 +290,7 @@ public class RedactorScreen implements Screen {
                     draggedImage.setSize(mishenSize, mishenSize);
                 } else if (blockType.equals("Laser")) {
                     draggedImage.setSize(laserSize, laserSize);
-                }
-                else {
+                } else {
                     draggedImage.setSize(cellSize, cellSize);
                 }
                 draggedImageType = blockType;
@@ -308,12 +298,14 @@ public class RedactorScreen implements Screen {
                 draggedImage.setPosition(event.getStageX() - draggedImage.getWidth() / 2, event.getStageY() - draggedImage.getHeight() / 2);
                 Gdx.graphics.setCursor(game.getDragCursor());
             }
+
             @Override
             public void drag(InputEvent event, float x, float y, int pointer) {
                 if (draggedImage != null) {
                     draggedImage.setPosition(event.getStageX() - draggedImage.getWidth() / 2, event.getStageY() - draggedImage.getHeight() / 2);
                 }
             }
+
             @Override
             public void dragStop(InputEvent event, float x, float y, int pointer) {
                 if (draggedImage == null) return;
@@ -326,8 +318,9 @@ public class RedactorScreen implements Screen {
                 float dropY = event.getStageY();
                 int cellI = -1;
                 int cellJ = -1;
-                for (int i = 0; i < currentGrid.length; i++) {
-                    for (int j = 0; j < currentGrid[i].length; j++) {
+                String[][] grid = logic.getGrid();
+                for (int i = 0; i < grid.length; i++) {
+                    for (int j = 0; j < grid[i].length; j++) {
                         float cellStartX = gridStartX + i * (cellSize + cellSpacing);
                         float cellStartY = gridStartY + j * (cellSize + cellSpacing);
                         float cellEndX = cellStartX + cellSize;
@@ -343,29 +336,26 @@ public class RedactorScreen implements Screen {
                     String targetCellKey = cellI + "_" + cellJ;
                     if (draggedImageType.equals("Mishen")) {
                         if (initialCellKey != null && !initialCellKey.equals(targetCellKey)) {
-                            mishenPositions.remove(initialCellKey);
+                            logic.setCell(Integer.parseInt(initialCellKey.split("_")[0]), Integer.parseInt(initialCellKey.split("_")[1]), "pustoi");
                             updateCellImage(Integer.parseInt(initialCellKey.split("_")[0]), Integer.parseInt(initialCellKey.split("_")[1]), "pustoi");
                         }
-                        String currentPosition = mishenPositions.get(targetCellKey);
+                        String currentPosition = logic.getMishenPositions().get(targetCellKey);
                         if (currentPosition == null) {
-                            currentGrid[cellI][cellJ] = draggedImageType + "_cc";
-                            mishenPositions.put(targetCellKey, "cc");
+                            logic.setCell(cellI, cellJ, draggedImageType + "_cc");
                             updateCellImage(cellI, cellJ, draggedImageType + "_cc");
                         } else {
-                            String newPosition = getNewMishenPosition(currentPosition);
-                            currentGrid[cellI][cellJ] = draggedImageType + "_" + newPosition;
-                            mishenPositions.put(targetCellKey, newPosition);
+                            String newPosition = logic.getNewMishenPosition(currentPosition);
+                            logic.setCell(cellI, cellJ, draggedImageType + "_" + newPosition);
                             updateCellImage(cellI, cellJ, draggedImageType + "_" + newPosition);
                         }
                     } else if (draggedImageType.equals("Laser")) {
                         if (initialCellKey != null && !initialCellKey.equals(targetCellKey)) {
-                            laserPositions.remove(initialCellKey);
+                            logic.setCell(Integer.parseInt(initialCellKey.split("_")[0]), Integer.parseInt(initialCellKey.split("_")[1]), "pustoi");
                             updateCellImage(Integer.parseInt(initialCellKey.split("_")[0]), Integer.parseInt(initialCellKey.split("_")[1]), "pustoi");
                         }
-                        String currentPosition = laserPositions.get(targetCellKey);
+                        String currentPosition = logic.getLaserPositions().get(targetCellKey);
                         if (currentPosition == null) {
-                            currentGrid[cellI][cellJ] = draggedImageType + "_cc_0";
-                            laserPositions.put(targetCellKey, "cc_0");
+                            logic.setCell(cellI, cellJ, draggedImageType + "_cc_0");
                             updateCellImage(cellI, cellJ, draggedImageType + "_cc_0");
                             currentLaserPosition = "cc";
                             float[] offset = calculateLaserOffset(currentLaserPosition);
@@ -375,9 +365,8 @@ public class RedactorScreen implements Screen {
                             String[] parts = currentPosition.split("_");
                             String position = parts[0];
                             float rotation = parts.length > 1 ? Float.parseFloat(parts[1]) : 0;
-                            String newPosition = getNewLaserPosition(position);
-                            currentGrid[cellI][cellJ] = draggedImageType + "_" + newPosition + "_" + rotation;
-                            laserPositions.put(targetCellKey, newPosition + "_" + rotation);
+                            String newPosition = logic.getNewLaserPosition(position);
+                            logic.setCell(cellI, cellJ, draggedImageType + "_" + newPosition + "_" + rotation);
                             updateCellImage(cellI, cellJ, draggedImageType + "_" + newPosition + "_" + rotation);
                             currentLaserPosition = newPosition;
                             float[] offset = calculateLaserOffset(currentLaserPosition);
@@ -385,7 +374,7 @@ public class RedactorScreen implements Screen {
                             laserY = gridStartY + cellJ * (cellSize + cellSpacing) + offset[1];
                         }
                     } else {
-                        currentGrid[cellI][cellJ] = draggedImageType;
+                        logic.setCell(cellI, cellJ, draggedImageType);
                         updateCellImage(cellI, cellJ, draggedImageType);
                     }
                 }
@@ -397,43 +386,9 @@ public class RedactorScreen implements Screen {
                 draggedImageType = null;
                 Gdx.graphics.setCursor(game.getCustomCursor());
             }
-            private String getNewMishenPosition(String currentPosition) {
-                if (currentPosition.equals("cc")) return "tl";
-                if (currentPosition.equals("tl")) return "tn";
-                if (currentPosition.equals("tn")) return "tp";
-                if (currentPosition.equals("tp")) return "cp";
-                if (currentPosition.equals("cp")) return "cl";
-                if (currentPosition.equals("cl")) return "nl";
-                if (currentPosition.equals("nl")) return "nn";
-                if (currentPosition.equals("nn")) return "np";
-                if (currentPosition.equals("np")) return "cc";
-                return "cc";
-            }
-            private String getNewLaserPosition(String currentPosition) {
-                if (currentPosition.equals("cc")) return "tl";
-                if (currentPosition.equals("tl")) return "tn";
-                if (currentPosition.equals("tn")) return "tp";
-                if (currentPosition.equals("tp")) return "cp";
-                if (currentPosition.equals("cp")) return "cl";
-                if (currentPosition.equals("cl")) return "nl";
-                if (currentPosition.equals("nl")) return "nn";
-                if (currentPosition.equals("nn")) return "np";
-                if (currentPosition.equals("np")) return "cc";
-                return "cc";
-            }
         });
     }
-    private int countLasersOnGrid() {
-        int laserCount = 0;
-        for (int i = 0; i < currentGrid.length; i++) {
-            for (int j = 0; j < currentGrid[i].length; j++) {
-                if (currentGrid[i][j].startsWith("Laser")) {
-                    laserCount++;
-                }
-            }
-        }
-        return laserCount;
-    }
+
     private float[] calculateLaserOffset(String position) {
         float offsetX = 0;
         float offsetY = 0;
@@ -477,13 +432,15 @@ public class RedactorScreen implements Screen {
         }
         return new float[]{offsetX, offsetY};
     }
+
     private void addMouseWheelListenerToStage() {
         stage.addListener(new com.badlogic.gdx.scenes.scene2d.InputListener() {
             @Override
             public boolean scrolled(InputEvent event, float x, float y, float amountX, float amountY) {
                 if (!gridCreated) return false;
-                for (int i = 0; i < currentGrid.length; i++) {
-                    for (int j = 0; j < currentGrid[i].length; j++) {
+                String[][] grid = logic.getGrid();
+                for (int i = 0; i < grid.length; i++) {
+                    for (int j = 0; j < grid[i].length; j++) {
                         String cellKey = i + "_" + j;
                         float cellStartX = gridStartX + i * (cellSize + cellSpacing);
                         float cellStartY = gridStartY + j * (cellSize + cellSpacing);
@@ -491,22 +448,19 @@ public class RedactorScreen implements Screen {
                         float cellEndY = cellStartY + cellSize;
 
                         if (x >= cellStartX && x < cellEndX && y >= cellStartY && y < cellEndY) {
-                            if (currentGrid[i][j].startsWith("Mishen")) {
-                                String currentMishenPosition = currentGrid[i][j].split("_")[1];
-                                String newMishenPosition = getNewMishenPositionByScroll(currentMishenPosition, amountY);
-                                currentGrid[i][j] = "Mishen_" + newMishenPosition;
-                                mishenPositions.put(cellKey, newMishenPosition);
+                            if (grid[i][j].startsWith("Mishen")) {
+                                String currentMishenPosition = grid[i][j].split("_")[1];
+                                String newMishenPosition = logic.getNewMishenPositionByScroll(currentMishenPosition, amountY);
+                                logic.setCell(i, j, "Mishen_" + newMishenPosition);
                                 updateCellImage(i, j, "Mishen_" + newMishenPosition);
                                 return true;
-                            }
-                            else if (currentGrid[i][j].startsWith("Laser")) {
-                                String[] parts = currentGrid[i][j].split("_");
+                            } else if (grid[i][j].startsWith("Laser")) {
+                                String[] parts = grid[i][j].split("_");
                                 String position = parts[1];
                                 float rotation = parts.length > 2 ? Float.parseFloat(parts[2]) : 0;
                                 float newRotation = (rotation + amountY * 2) % 360;
                                 if (newRotation < 0) newRotation += 360;
-                                currentGrid[i][j] = "Laser_" + position + "_" + newRotation;
-                                laserPositions.put(cellKey, position + "_" + newRotation);
+                                logic.setCell(i, j, "Laser_" + position + "_" + newRotation);
                                 updateCellImage(i, j, "Laser_" + position + "_" + newRotation);
                                 float[] offset = calculateLaserOffset(position);
                                 laserX = gridStartX + i * (cellSize + cellSpacing) + offset[0];
@@ -520,35 +474,11 @@ public class RedactorScreen implements Screen {
             }
         });
     }
-    private String getNewLaserPosition(String currentPosition) {
-        if (currentPosition.equals("cc")) return "tl";
-        if (currentPosition.equals("tl")) return "tn";
-        if (currentPosition.equals("tn")) return "tp";
-        if (currentPosition.equals("tp")) return "cp";
-        if (currentPosition.equals("cp")) return "cl";
-        if (currentPosition.equals("cl")) return "nl";
-        if (currentPosition.equals("nl")) return "nn";
-        if (currentPosition.equals("nn")) return "np";
-        if (currentPosition.equals("np")) return "cc";
-        return "cc";
-    }
-    private String getNewMishenPositionByScroll(String currentPosition, float scrollAmount) {
-        String[] positions = {"cc", "tl", "tn", "tp", "cp", "cl", "nl", "nn", "np"};
-        int currentIndex = -1;
-        for (int i = 0; i < positions.length; i++) {
-            if (positions[i].equals(currentPosition)) {
-                currentIndex = i;
-                break;
-            }
-        }
-        if (currentIndex == -1) return "cc";
-        int newIndex = (currentIndex + (scrollAmount > 0 ? 1 : -1)) % positions.length;
-        if (newIndex < 0) newIndex += positions.length;
-        return positions[newIndex];
-    }
+
     private String getCellKey(float x, float y) {
-        for (int i = 0; i < currentGrid.length; i++) {
-            for (int j = 0; j < currentGrid[i].length; j++) {
+        String[][] grid = logic.getGrid();
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[i].length; j++) {
                 float cellStartX = gridStartX + i * (cellSize + cellSpacing);
                 float cellStartY = gridStartY + j * (cellSize + cellSpacing);
                 if (x >= cellStartX && x < cellStartX + cellSize && y >= cellStartY && y < cellStartY + cellSize) {
@@ -558,6 +488,7 @@ public class RedactorScreen implements Screen {
         }
         return null;
     }
+
     private void updateCellImage(int i, int j, String blockType) {
         float x = gridStartX + i * (cellSize + cellSpacing);
         float y = gridStartY + j * (cellSize + cellSpacing);
@@ -566,6 +497,7 @@ public class RedactorScreen implements Screen {
             cellImages.get(cellKey).remove();
             cellImages.remove(cellKey);
         }
+
         Texture texture = null;
         String[] parts = blockType.split("_");
         String type = parts[0];
@@ -687,14 +619,13 @@ public class RedactorScreen implements Screen {
                 newImage.addListener(new ClickListener() {
                     @Override
                     public void clicked(InputEvent event, float x, float y) {
-                        String currentPosition = laserPositions.get(cellKey);
+                        String currentPosition = logic.getLaserPositions().get(cellKey);
                         if (currentPosition != null) {
                             String[] parts = currentPosition.split("_");
                             String position = parts[0];
                             float rotation = parts.length > 1 ? Float.parseFloat(parts[1]) : 0;
-                            String newPosition = getNewLaserPosition(position);
-                            currentGrid[i][j] = "Laser_" + newPosition + "_" + rotation;
-                            laserPositions.put(cellKey, newPosition + "_" + rotation);
+                            String newPosition = logic.getNewLaserPosition(position);
+                            logic.setCell(i, j, "Laser_" + newPosition + "_" + rotation);
                             updateCellImage(i, j, "Laser_" + newPosition + "_" + rotation);
                             currentLaserPosition = newPosition;
                             float[] offset = calculateLaserOffset(currentLaserPosition);
@@ -705,94 +636,23 @@ public class RedactorScreen implements Screen {
                 });
             } else {
                 newImage.setSize(cellSize, cellSize);
+                if ("Block".equals(type)) {
+                    makeGridBlockDraggable(newImage, i, j);
+                }
             }
             newImage.setPosition(x, y);
             stage.addActor(newImage);
             cellImages.put(cellKey, newImage);
         } else if (type.equals("pustoi")) {
         }
-        if (gridCreated) {
-            game.batch.begin();
-            for (int k = 0; k < currentGrid.length; k++) {
-                for (int l = 0; l < currentGrid[k].length; l++) {
-                    if (currentGrid[k][l].startsWith("Laser")) {
-                        String[] laserData = currentGrid[k][l].split("_");
-                        float rotation = Float.parseFloat(laserData[2]);
-                        String cellKey1 = k + "_" + l;
-                        String currentPosition = laserPositions.get(cellKey1);
-                        if(currentPosition != null){
-                            float offsetX = 0;
-                            float offsetY = 0;
-                            switch (parts[0]) {
-                                case "nl":
-                                    offsetX = -cellSize / 2;
-                                    offsetY = -cellSize / 2;
-                                    break;
-                                case "nn":
-                                    offsetX = 0;
-                                    offsetY = -cellSize / 2;
-                                    break;
-                                case "np":
-                                    offsetX = cellSize / 2;
-                                    offsetY = -cellSize / 2;
-                                    break;
-                                case "cl":
-                                    offsetX = -cellSize / 2;
-                                    offsetY = 0;
-                                    break;
-                                case "cc":
-                                    offsetX = 0;
-                                    offsetY = 0;
-                                    break;
-                                case "cp":
-                                    offsetX = cellSize / 2;
-                                    offsetY = 0;
-                                    break;
-                                case "tl":
-                                    offsetX = -cellSize / 2;
-                                    offsetY = cellSize / 2;
-                                    break;
-                                case "tn":
-                                    offsetX = 0;
-                                    offsetY = cellSize / 2;
-                                    break;
-                                case "tp":
-                                    offsetX = cellSize / 2;
-                                    offsetY = cellSize / 2;
-                                    break;
-                            }
-                            float laserStartX = gridStartX + k * (cellSize + cellSpacing) + cellSize / 2 + offsetX;
-                            float laserStartY = gridStartY + l * (cellSize + cellSpacing) + cellSize / 2 + offsetY;
-                            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-                            shapeRenderer.setColor(Color.RED);
-                            float centerX = laserStartX;
-                            float centerY = laserStartY;
-                            float radius = 13;
-                            shapeRenderer.circle(centerX, centerY, radius);
-                            shapeRenderer.end();
-                            drawLaser(game.batch, laserStartX, laserStartY, rotation);
-                        }
-                    }
-                }
-            }
-            game.batch.end();
-        }
     }
 
-    private String[][] createGrid(int width, int height) {
-        String[][] grid = new String[width][height];
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                grid[i][j] = "Ser";
-            }
-        }
-        return grid;
-    }
     private void drawGrid() {
         if (!gridCreated) return;
         cellImages.clear();
-        for (int i = 0; i < currentGrid.length; i++) {
-            for (int j = 0; j < currentGrid[i].length; j++) {
+        String[][] grid = logic.getGrid();
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[i].length; j++) {
                 float x = gridStartX + i * (cellSize + cellSpacing);
                 float y = gridStartY + j * (cellSize + cellSpacing);
                 String cellKey = i + "_" + j;
@@ -810,169 +670,111 @@ public class RedactorScreen implements Screen {
     @Override
     public void show() {
     }
+
     private void stopAndRewind() {
         playMusic.stop();
         playMusic.setPosition(0);
     }
+
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
         stage.draw();
-        if (gridCreated) {
-            game.batch.begin();
-            for (int i = 0; i < currentGrid.length; i++) {
-                for (int j = 0; j < currentGrid[i].length; j++) {
-                    if (currentGrid[i][j].startsWith("Laser")) {
-                        String[] laserData = currentGrid[i][j].split("_");
-                        float rotation = Float.parseFloat(laserData[2]);
-                        String cellKey = i + "_" + j;
-                        String currentPosition = laserPositions.get(cellKey);
-                        if(currentPosition != null){
-                            String[] parts = currentPosition.split("_");
-                            float offsetX = 0;
-                            float offsetY = 0;
-                            switch (parts[0]) {
-                                case "nl":
-                                    offsetX = -cellSize / 2;
-                                    offsetY = -cellSize / 2;
-                                    break;
-                                case "nn":
-                                    offsetX = 0;
-                                    offsetY = -cellSize / 2;
-                                    break;
-                                case "np":
-                                    offsetX = cellSize / 2;
-                                    offsetY = -cellSize / 2;
-                                    break;
-                                case "cl":
-                                    offsetX = -cellSize / 2;
-                                    offsetY = 0;
-                                    break;
-                                case "cc":
-                                    offsetX = 0;
-                                    offsetY = 0;
-                                    break;
-                                case "cp":
-                                    offsetX = cellSize / 2;
-                                    offsetY = 0;
-                                    break;
-                                case "tl":
-                                    offsetX = -cellSize / 2;
-                                    offsetY = cellSize / 2;
-                                    break;
-                                case "tn":
-                                    offsetX = 0;
-                                    offsetY = cellSize / 2;
-                                    break;
-                                case "tp":
-                                    offsetX = cellSize / 2;
-                                    offsetY = cellSize / 2;
-                                    break;
-                            }
-                            float laserX = gridStartX + i * (cellSize + cellSpacing) + cellSize / 2 + offsetX;
-                            float laserY = gridStartY + j * (cellSize + cellSpacing) + cellSize / 2 + offsetY;
-                            drawLaser(game.batch, laserX, laserY, rotation);
+        if (gridCreated && laserView != null) {
+            laserView.draw();
+        }
+    }
+
+    private void makeGridBlockDraggable(final Image img, final int i0, final int j0) {
+        img.addListener(new DragListener() {
+            float startX, startY;
+            int ci = i0, cj = j0;
+
+            @Override
+            public void dragStart(InputEvent e, float x, float y, int p) {
+                startX = img.getX();
+                startY = img.getY();
+                cellImages.remove(ci + "_" + cj);
+                Gdx.graphics.setCursor(game.getDragCursor());
+                img.toFront();
+            }
+
+            @Override
+            public void drag(InputEvent e, float x, float y, int p) {
+                img.moveBy(e.getStageX() - img.getX() - img.getWidth() / 2,
+                    e.getStageY() - img.getY() - img.getHeight() / 2);
+            }
+
+            @Override
+            public void dragStop(InputEvent e, float x, float y, int p) {
+                int ni = -1, nj = -1;
+                float px = e.getStageX();
+                float py = e.getStageY();
+                String[][] grid = logic.getGrid();
+                outer:
+                for (int i = 0; i < grid.length; i++)
+                    for (int j = 0; j < grid[i].length; j++) {
+                        float sx = gridStartX + i * (cellSize + cellSpacing);
+                        float sy = gridStartY + j * (cellSize + cellSpacing);
+                        if (px >= sx && px < sx + cellSize &&
+                            py >= sy && py < sy + cellSize) {
+                            ni = i;
+                            nj = j;
+                            break outer;
                         }
                     }
+                boolean moved = ni != -1 && "Ser".equals(grid[ni][nj]);
+                if (moved) {
+                    String destKey = ni + "_" + nj;
+                    Actor destActor = cellImages.remove(destKey);
+                    if (destActor != null) destActor.remove();
+                    if (!cellImages.containsKey(ci + "_" + cj))
+                        updateCellImage(ci, cj, "Ser");
+                    img.setPosition(gridStartX + ni * (cellSize + cellSpacing),
+                        gridStartY + nj * (cellSize + cellSpacing));
+                    cellImages.put(destKey, img);
+                    logic.setCell(ci, cj, "Ser");
+                    logic.setCell(ni, nj, "Block");
+                    ci = ni;
+                    cj = nj;
+                } else {
+                    img.setPosition(startX, startY);
+                    cellImages.put(ci + "_" + cj, img);
                 }
+                Gdx.graphics.setCursor(game.getCustomCursor());
             }
-            game.batch.end();
-        }
+        });
     }
-    private void drawLaser(SpriteBatch batch, float x, float y, float rotation) {
-        batch.end();
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(Color.RED);
-        float startX = laserX + laserSize / 2;
-        float startY = laserY + laserSize / 2;
-        float angleRad = (float) Math.toRadians(rotation);
-        float maxLaserLength = cellSize * Math.max(currentGrid.length, currentGrid[0].length);
-        float endX = startX + maxLaserLength * (float) Math.cos(angleRad);
-        float endY = startY + maxLaserLength * (float) Math.sin(angleRad);
-        float laserWidth = 5f;
-        drawReflectedLaser(startX, startY, rotation);
-        shapeRenderer.end();
-        batch.begin();
-    }
-    private void drawReflectedLaser(float startX, float startY, float angle) {
-        shapeRenderer.setColor(1, 0, 0, 1);
-        float laserWidth = 5f;
-        shapeRenderer.setColor(1, 0, 0, 1);
-        float radians = (float) Math.toRadians(angle);
-        float endX = startX;
-        float endY = startY;
-        float dirX = (float) Math.cos(radians);
-        float dirY = (float) Math.sin(radians);
-        while (true) {
-            float nextX = endX + dirX;
-            float nextY = endY + dirY;
-            if (nextX < gridStartX || nextX > gridStartX + currentGrid.length * (cellSize + cellSpacing) ||
-                nextY < gridStartY || nextY > gridStartY + currentGrid[0].length * (cellSize + cellSpacing)) {
-                shapeRenderer.rectLine(startX, startY, endX, endY, laserWidth);
-                break;
-            }
-            int cellI = (int) ((nextX - gridStartX) / (cellSize + cellSpacing));
-            int cellJ = (int) ((nextY - gridStartY) / (cellSize + cellSpacing));
-            if ((nextX - gridStartX) % (cellSize + cellSpacing) > cellSize) {
-                cellI = -1;
-            }
-            if ((nextY - gridStartY) % (cellSize + cellSpacing) > cellSize) {
-                cellJ = -1;
-            }
-            if (cellI >= 0 && cellI < currentGrid.length && cellJ >= 0 && cellJ < currentGrid[0].length) {
-                String cellType = currentGrid[cellI][cellJ];
-                if (cellType.equals("Block")) {
-                    float cellStartX = gridStartX + cellI * (cellSize + cellSpacing);
-                    float cellStartY = gridStartY + cellJ * (cellSize + cellSpacing);
-                    float cellEndX = cellStartX + cellSize;
-                    float cellEndY = cellStartY + cellSize;
-                    if (nextX >= cellStartX && nextX <= cellEndX && (endY < cellStartY || endY > cellEndY)) {
-                        dirY = -dirY;
-                    } else if (nextY >= cellStartY && nextY <= cellEndY && (endX < cellStartX || endX > cellEndX)) {
-                        dirX = -dirX;
-                    }
-                    if (Math.abs(nextX - cellStartX) < 1) {
-                        dirX = -Math.abs(dirX);
-                    } else if (Math.abs(nextX - cellEndX) < 1) {
-                        dirX = Math.abs(dirX);
-                    }
 
-                    if (Math.abs(nextY - cellStartY) < 1) {
-                        dirY = -Math.abs(dirY);
-                    } else if (Math.abs(nextY - cellEndY) < 1) {
-                        dirY = Math.abs(dirY);
-                    }
-                    shapeRenderer.circle(endX, endY, 10);
-                    shapeRenderer.rectLine(startX, startY, endX, endY, laserWidth);
-                    startX = endX;
-                    startY = endY;
-                }
-            }
-            endX += dirX;
-            endY += dirY;
-        }
-    }
     @Override
     public void resize(int width, int height) {
     }
+
     @Override
     public void pause() {
     }
+
     @Override
     public void resume() {
     }
+
     @Override
     public void hide() {
     }
+
     @Override
     public void dispose() {
         stage.dispose();
         imageredactor.dispose();
         playMusic.dispose();
-        shapeRenderer.dispose();
         serTexture.dispose();
+        blockTexture.dispose();
+        pustoiTexture.dispose();
+        mishenTexture.dispose();
+        if (laserView != null) {
+            laserView.dispose();
+        }
     }
 }

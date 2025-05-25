@@ -12,16 +12,16 @@ import com.puzzle.UI.MenuScreen;
 
 public class MainGame extends Game {
     public SpriteBatch batch;
-    private Music backgroundMusic;
+    Music backgroundMusic;
     private String backgroundMusicFile = "music.mp3";
-    private Cursor customCursor;
-    private Cursor dragCursor;
-    private int gameWidth = 1920;
-    private int gameHeight = 1080;
-    private boolean isFullscreen = false;
+    Cursor customCursor;
+    Cursor dragCursor;
+    int gameWidth = 1920;
+    int gameHeight = 1080;
+    boolean isFullscreen = false;
     private float globalVolume = 0.5f;
-    private Preferences prefs;
-    private Music levelMusic;
+    Preferences prefs;
+    Music levelMusic;
 
     @Override
     public void create() {
@@ -51,12 +51,20 @@ public class MainGame extends Game {
     }
     public void setGlobalVolume(float volume) {
         this.globalVolume = MathUtils.clamp(volume, 0f, 1f);
-        updateAllAudioVolumes();
-        prefs.putFloat("globalVolume", globalVolume);
-        prefs.flush();
+        if (backgroundMusic != null) {
+            backgroundMusic.setVolume(globalVolume);
+        }
+        if (levelMusic != null) {
+            levelMusic.setVolume(globalVolume);
+        }
+        if (prefs != null) {
+            prefs.putFloat("globalVolume", globalVolume);
+            prefs.flush();
+        }
     }
     public void updateAllAudioVolumes() {
-        backgroundMusic.setVolume(globalVolume);
+        if (backgroundMusic != null) backgroundMusic.setVolume(globalVolume);
+        if (levelMusic != null)       levelMusic.setVolume(globalVolume);
     }
     @Override
     public void dispose() {
@@ -95,7 +103,7 @@ public class MainGame extends Game {
             backgroundMusic.play();
         }
     }
-    private void applyResolutionSettings() {
+    void applyResolutionSettings() {
         int screenWidth = Gdx.graphics.getDisplayMode().width;
         int screenHeight = Gdx.graphics.getDisplayMode().height;
         if (screenWidth > gameWidth || screenHeight > gameHeight) {

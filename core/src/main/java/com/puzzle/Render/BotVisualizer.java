@@ -32,9 +32,9 @@ public class BotVisualizer {
                 @Override
                 public void run() {
                     String[][] g = logic.getGrid();
-                    String tmp = g[m.blockRow][m.blockCol];
-                    g[m.blockRow][m.blockCol] = g[m.serRow][m.serCol];
-                    g[m.serRow][m.serCol] = tmp;
+                    String tmp = g[m.blockR()][m.blockC()];
+                    g[m.blockR()][m.blockC()] = g[m.serR()][m.serC()];
+                    g[m.serR()][m.serC()]     = tmp;
                     logic.updateGrid(g);
                     view.refreshGrid();
                     view.redrawLasers();

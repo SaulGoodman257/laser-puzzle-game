@@ -47,6 +47,7 @@ public class Level1Screen implements Screen {
         {"Laser_сс_60", "Ser", "Mishen_cc", "Ser"},
         {"Ser", "Ser", "Ser", "Ser"},
         {"Ser", "Ser", "Ser", "Block"}
+
     };
 
     public Level1Screen(final MainGame game) {

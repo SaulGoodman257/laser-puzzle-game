@@ -33,6 +33,8 @@ public class GameLogic {
 
     public void updateGrid(String[][] newGrid) {
         this.grid = copyGrid(newGrid);
+        totalTargets = 0;
+        countTargets();
         hitTargets.clear();
         checkWinCondition();
     }

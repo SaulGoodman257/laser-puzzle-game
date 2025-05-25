@@ -46,8 +46,8 @@ public class Level4Screen implements Screen {
     private String[][] level4Grid = {
         {"pustoi",               "Block",          "pustoi",        "Block" ,          "pustoi",               "Ser"               },
         {"Block",                 "Block",         "pustoi",       "Block" ,          "Block",              "pustoi"                  },
-        {"Mishen_cc",              "pustoi",          "Block",           "pustoi",         "Block",            "Laser_tn_319.7"                  },
-        {"pustoi",                      "Ser",         "Block",          "Block" ,         "pustoi",            "Ser"               }
+        {"Mishen_cc",              "pustoi",          "Block",           "pustoi",         "Ser",            "Laser_tn_319.7"                  },
+        {"pustoi",                      "Ser",         "Block",          "Block" ,         "pustoi",            "Block"               }
     };
     public Level4Screen(final MainGame game) {
         this.game = game;
